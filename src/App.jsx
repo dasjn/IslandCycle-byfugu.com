@@ -1,21 +1,36 @@
 import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import Controls from "./components/Controls";
 import CircleSelector from "./components/CircleSelector";
 import ImageTransitions from "./components/ImageTransitions";
+import BackButton from "./components/BackButton";
 
 export default function App() {
-  const [isToggled, setIsToggled] = useState(false);
+  // Estado principal: null = parallax view, number = specific image view
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [selectedNumber, setSelectedNumber] = useState(null);
   const [parallaxValues, setParallaxValues] = useState(null);
 
-  const handleToggle = () => {
-    console.log("Toggle clicked, current state:", isToggled);
-    setIsToggled((prev) => !prev);
+  const handleAnimationChange = (animating) => {
+    setIsAnimating(animating);
+  };
+
+  const handleNumberClick = (number) => {
+    console.log("Number clicked:", number);
+    setSelectedNumber(number);
+  };
+
+  const handleBackClick = () => {
+    console.log("Back clicked, returning to parallax");
+    setSelectedNumber(null);
   };
 
   const handleParallaxUpdate = (values) => {
     setParallaxValues(values);
   };
+
+  // isToggled = true cuando hay un número seleccionado (muestra imagen específica)
+  // isToggled = false cuando selectedNumber es null (muestra parallax + CircleSelector)
+  const isToggled = selectedNumber !== null;
 
   return (
     <div
@@ -41,12 +56,21 @@ export default function App() {
       >
         <ImageTransitions
           isToggled={isToggled}
+          selectedNumber={selectedNumber}
           onParallaxUpdate={handleParallaxUpdate}
+          onAnimationChange={handleAnimationChange}
         />
       </Canvas>
 
-      <Controls isToggled={isToggled} onToggle={handleToggle} />
-      <CircleSelector parallaxValues={parallaxValues} isVisible={!isToggled} />
+      {/* CircleSelector visible en la vista parallax (cuando NO hay número seleccionado) */}
+      <CircleSelector
+        parallaxValues={parallaxValues}
+        isVisible={!isToggled && !isAnimating}
+        onNumberClick={handleNumberClick}
+      />
+
+      {/* BackButton visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
+      <BackButton isVisible={isToggled} onBackClick={handleBackClick} />
     </div>
   );
 }

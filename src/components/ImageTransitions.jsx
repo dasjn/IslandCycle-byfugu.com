@@ -1,9 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import vertexShader from "../shaders/vertex.glsl";
 import fragmentShader from "../shaders/fragment.glsl";
+
+// Mapeo de números a imágenes para la escena 1
+const IMAGE_MAP = {
+  1: "cloud.jpg", // CLOUD
+  2: "rain.jpg", // RAIN
+  3: "ground.jpg", // GROUND
+  4: "sea.jpg", // SEA
+  5: "evaporation.jpg", // EVAPORATION
+};
 
 function loadImageTexture(imagePath) {
   const loader = new THREE.TextureLoader();
@@ -18,7 +27,6 @@ function loadImageTexture(imagePath) {
 }
 
 function useParallax() {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const targetPosition = useRef({ x: 0, y: 0 });
   const currentPosition = useRef({ x: 0, y: 0 });
 
@@ -74,9 +82,17 @@ const TransitionMaterial = shaderMaterial(
   fragmentShader
 );
 
-export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
+export default function ImageTransitions({
+  isToggled,
+  selectedNumber,
+  onParallaxUpdate,
+  onAnimationChange,
+}) {
+  const [displayedNumber, setDisplayedNumber] = useState(null);
   const { gl, viewport, size } = useThree();
   const meshRef = useRef();
+  const wasAnimatingRef = useRef(false);
+  const previousProgressRef = useRef(0);
   const { updateParallax } = useParallax();
 
   // Referencias para los planos de parallax
@@ -86,6 +102,26 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
 
   // Crear render targets con calidad mejorada
   const [renderTargets, setRenderTargets] = useState(null);
+
+  // Función para configurar texturas de manera consistente
+  const configureTexture = useCallback(
+    (texture) => {
+      texture.encoding = THREE.sRGBEncoding;
+      texture.anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
+      return texture;
+    },
+    [gl]
+  );
+
+  // Memoizar las texturas del parallax que nunca cambian
+  const parallaxTextures = useMemo(
+    () => ({
+      bg: configureTexture(loadImageTexture("BG_v01.png")),
+      clouds: configureTexture(loadImageTexture("Clouds_v01.png")),
+      island: configureTexture(loadImageTexture("Island_v01.png")),
+    }),
+    [configureTexture]
+  );
 
   useEffect(() => {
     // Calcular resolución óptima basada en el canvas
@@ -181,7 +217,7 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
   const progress = useRef(0);
   const targetProgress = isToggled ? 1 : 0;
 
-  // Crear contenido de las escenas con imágenes que ocupan toda la pantalla
+  // Crear contenido de las escenas
   useEffect(() => {
     // Limpiar escenas anteriores
     while (scene1.children.length > 0) {
@@ -191,24 +227,17 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
       scene2.remove(scene2.children[0]);
     }
 
-    // Cargar las imágenes con configuración mejorada
-    const texture1 = loadImageTexture("cloud.jpg");
-
-    const texture2 = loadImageTexture("BG_v01.png");
-    const texture3 = loadImageTexture("Clouds_v01.png");
-    const texture4 = loadImageTexture("Island_v01.png");
-
-    // Configurar texturas para mejor calidad
-    [texture1, texture2, texture3, texture4].forEach((texture) => {
-      texture.encoding = THREE.sRGBEncoding;
-      texture.anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
-    });
-
     // Calcular dimensiones para pantalla completa
     const planeWidth = viewport.width;
     const planeHeight = viewport.height;
 
-    // Escena 1: Plano con imagen que ocupa toda la pantalla
+    // ESCENA 1: Imagen específica según el número mostrado
+    let texture1Path = "cloud.jpg";
+    if (displayedNumber && IMAGE_MAP[displayedNumber]) {
+      texture1Path = IMAGE_MAP[displayedNumber];
+    }
+
+    const texture1 = configureTexture(loadImageTexture(texture1Path));
     const planeGeometry1 = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const planeMaterial1 = new THREE.MeshBasicMaterial({
       map: texture1,
@@ -217,10 +246,10 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
     const plane1 = new THREE.Mesh(planeGeometry1, planeMaterial1);
     scene1.add(plane1);
 
-    // Escena 2: Planos con parallax
+    // ESCENA 2: Siempre el parallax (usando texturas memoizadas)
     const planeGeometry2 = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const planeMaterial2 = new THREE.MeshBasicMaterial({
-      map: texture2,
+      map: parallaxTextures.bg,
       transparent: true,
     });
     const plane2 = new THREE.Mesh(planeGeometry2, planeMaterial2);
@@ -230,7 +259,7 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
 
     const planeGeometry3 = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const planeMaterial3 = new THREE.MeshBasicMaterial({
-      map: texture3,
+      map: parallaxTextures.clouds,
       transparent: true,
     });
     const plane3 = new THREE.Mesh(planeGeometry3, planeMaterial3);
@@ -240,7 +269,7 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
 
     const planeGeometry4 = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const planeMaterial4 = new THREE.MeshBasicMaterial({
-      map: texture4,
+      map: parallaxTextures.island,
       transparent: true,
     });
     const plane4 = new THREE.Mesh(planeGeometry4, planeMaterial4);
@@ -248,8 +277,26 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
     scene2.add(plane4);
     plane4Ref.current = plane4;
 
-    console.log("Escenas creadas con parallax habilitado");
-  }, [scene1, scene2, gl, viewport.width, viewport.height]);
+    console.log("Escenas actualizadas:");
+    console.log("- Escena 1 (imagen específica):", texture1Path);
+    console.log("- Escena 2 (parallax): BG + Clouds + Island");
+  }, [
+    scene1,
+    scene2,
+    gl,
+    viewport.width,
+    viewport.height,
+    displayedNumber,
+    parallaxTextures,
+    configureTexture,
+  ]);
+
+  // Actualizar displayedNumber cuando selectedNumber cambia de null a número
+  useEffect(() => {
+    if (selectedNumber !== null) {
+      setDisplayedNumber(selectedNumber);
+    }
+  }, [selectedNumber]);
 
   useFrame((state) => {
     if (!renderTargets) return;
@@ -260,10 +307,34 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
     const speed = 0.005;
     progress.current += (targetProgress - progress.current) * speed;
 
+    let isCurrentlyAnimating;
+
+    if (selectedNumber === null) {
+      // Yendo hacia parallax: usar umbral más estricto para evitar popeo
+      isCurrentlyAnimating = Math.abs(progress.current - targetProgress) > 0.3;
+    } else {
+      // Yendo hacia imagen específica: usar umbral más laxo para respuesta rápida
+      isCurrentlyAnimating = Math.abs(progress.current - targetProgress) > 0.1;
+    }
+
+    if (wasAnimatingRef.current !== isCurrentlyAnimating) {
+      wasAnimatingRef.current = isCurrentlyAnimating;
+      if (onAnimationChange) {
+        onAnimationChange(isCurrentlyAnimating);
+      }
+    }
+
+    // Manejar el cambio de displayedNumber al volver al parallax
+    if (selectedNumber === null && displayedNumber !== null) {
+      if (Math.abs(progress.current - 0) < 0.05) {
+        setDisplayedNumber(null);
+      }
+    }
+
     // Actualizar el parallax
     const parallaxValues = updateParallax();
 
-    // Comunicar los valores del parallax al componente padre para la capa HTML
+    // Comunicar los valores del parallax al componente padre
     if (onParallaxUpdate) {
       onParallaxUpdate({
         ...parallaxValues,
@@ -271,7 +342,7 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
       });
     }
 
-    // Aplicar diferentes intensidades de parallax a cada plano
+    // Aplicar diferentes intensidades de parallax a cada plano de la ESCENA 2
     if (plane2Ref.current) {
       // Plano de fondo - movimiento sutil (intensidad 1%)
       plane2Ref.current.position.x = parallaxValues.x * 0.01 * viewport.width;
@@ -295,13 +366,13 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
     gl.getClearColor(currentClearColor);
     const currentClearAlpha = gl.getClearAlpha();
 
-    // Renderizar escena 1 con configuración optimizada
+    // Renderizar escena 1 (imagen específica) en rt1
     gl.setRenderTarget(renderTargets.rt1);
     gl.setClearColor("#000000", 1);
     gl.clear(true, true, true);
     gl.render(scene1, camera);
 
-    // Renderizar escena 2 con configuración optimizada
+    // Renderizar escena 2 (parallax) en rt2
     gl.setRenderTarget(renderTargets.rt2);
     gl.setClearColor("#000000", 1);
     gl.clear(true, true, true);
@@ -312,6 +383,7 @@ export default function ImageTransitions({ isToggled, onParallaxUpdate }) {
     gl.setClearColor(currentClearColor, currentClearAlpha);
 
     // Actualizar material de transición
+    // uTexture1 = imagen específica, uTexture2 = parallax
     material.uTexture1 = renderTargets.rt1.texture;
     material.uTexture2 = renderTargets.rt2.texture;
     material.uProgress = progress.current;
