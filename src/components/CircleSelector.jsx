@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import MagneticElement from "./MagneticElement";
 
 export default function CircleSelector({
   parallaxValues,
@@ -21,7 +22,7 @@ export default function CircleSelector({
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{
             duration: 0.4,
-            ease: [0.25, 0.1, 0.25, 1], // Bezier suave
+            ease: [0.25, 0.1, 0.25, 1],
           }}
         >
           {/* Central circle */}
@@ -47,18 +48,14 @@ export default function CircleSelector({
             </div>
           </motion.div>
 
-          {/* Number 1 - Clickable */}
-          <motion.button
+          {/* Number 1 - Magnético */}
+          <MagneticElement
             onClick={() => handleNumberClick(1)}
             className="absolute top-[28%] left-1/2 -translate-x-1/2 w-6 h-6 border border-white/50 rounded-full flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:border-white hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            delay={0.3}
           >
             1
-          </motion.button>
+          </MagneticElement>
 
           {/* RAIN - Left */}
           <motion.div
@@ -81,18 +78,14 @@ export default function CircleSelector({
             </div>
           </motion.div>
 
-          {/* Number 2 - Clickable */}
-          <motion.button
+          {/* Number 2 - Magnético */}
+          <MagneticElement
             onClick={() => handleNumberClick(2)}
             className="absolute top-[48%] left-[30%] -translate-y-1/2 w-6 h-6 border border-white/50 rounded-full flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:border-white hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            delay={0.4}
           >
             2
-          </motion.button>
+          </MagneticElement>
 
           {/* EVAPORATION - Right */}
           <motion.div
@@ -112,18 +105,14 @@ export default function CircleSelector({
             </div>
           </motion.div>
 
-          {/* Number 5 - Clickable */}
-          <motion.button
+          {/* Number 5 - Magnético */}
+          <MagneticElement
             onClick={() => handleNumberClick(5)}
             className="absolute top-[48%] right-[30%] -translate-y-1/2 w-6 h-6 border border-white/50 rounded-full flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:border-white hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            delay={0.5}
           >
             5
-          </motion.button>
+          </MagneticElement>
 
           {/* GROUND - Bottom Left */}
           <motion.div
@@ -143,18 +132,14 @@ export default function CircleSelector({
             </div>
           </motion.div>
 
-          {/* Number 3 - Clickable */}
-          <motion.button
+          {/* Number 3 - Magnético */}
+          <MagneticElement
             onClick={() => handleNumberClick(3)}
             className="absolute bottom-[12%] left-[25%] -translate-x-1/2 w-6 h-6 border border-white/50 rounded-full flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:border-white hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.45, duration: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            delay={0.45}
           >
             3
-          </motion.button>
+          </MagneticElement>
 
           {/* SEA - Bottom Right */}
           <motion.div
@@ -177,18 +162,14 @@ export default function CircleSelector({
             </div>
           </motion.div>
 
-          {/* Number 4 - Clickable */}
-          <motion.button
+          {/* Number 4 - Magnético */}
+          <MagneticElement
             onClick={() => handleNumberClick(4)}
             className="absolute bottom-[12%] right-[25%] translate-x-1/2 w-6 h-6 border border-white/50 rounded-full flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:border-white hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.55, duration: 0.3 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            delay={0.55}
           >
             4
-          </motion.button>
+          </MagneticElement>
         </motion.div>
       )}
     </AnimatePresence>
