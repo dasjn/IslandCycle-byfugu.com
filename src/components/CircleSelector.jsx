@@ -67,7 +67,7 @@ export default function CircleSelector({
           {/* Number 1 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(1)}
-            className="absolute top-[16%] left-1/2 -translate-x-1/2 w-6 h-6  flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-6 h-6  flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("cloud")}
             onLeave={() => setHoveredSection(null)}
           >

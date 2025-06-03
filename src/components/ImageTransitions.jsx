@@ -5,13 +5,13 @@ import { shaderMaterial } from "@react-three/drei";
 import vertexShader from "../shaders/vertex.glsl";
 import fragmentShader from "../shaders/fragment.glsl";
 
-// Mapeo de números a imágenes para la escena 1
-const IMAGE_MAP = {
-  1: "cloud.jpg", // CLOUD
-  2: "rain.jpg", // RAIN
-  3: "ground.jpg", // GROUND
-  4: "sea.jpg", // SEA
-  5: "evaporation.jpg", // EVAPORATION
+// Mapeo de números a videos/imágenes para la escena 1
+const MEDIA_MAP = {
+  1: { type: "image", src: "cloud.jpg" },
+  2: { type: "video", src: "Rain_v01.mp4" },
+  3: { type: "image", src: "ground.jpg" },
+  4: { type: "video", src: "Sea_v01.mp4" },
+  5: { type: "image", src: "evaporation.jpg" },
 };
 
 function loadImageTexture(imagePath) {
@@ -26,6 +26,39 @@ function loadImageTexture(imagePath) {
   return texture;
 }
 
+function createVideoTexture(videoSrc) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.src = videoSrc;
+    video.crossOrigin = "anonymous";
+    video.loop = true;
+    video.muted = true; // Necesario para autoplay en navegadores modernos
+    video.playsInline = true;
+
+    video.addEventListener("loadeddata", () => {
+      const texture = new THREE.VideoTexture(video);
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.format = THREE.RGBAFormat;
+      texture.generateMipmaps = false;
+
+      // Iniciar reproducción
+      video.play().catch(console.error);
+
+      resolve({ texture, video });
+    });
+
+    video.addEventListener("error", (e) => {
+      console.error("Error loading video:", e);
+      reject(e);
+    });
+
+    video.load();
+  });
+}
+
 function useParallax() {
   const targetPosition = useRef({ x: 0, y: 0 });
   const currentPosition = useRef({ x: 0, y: 0 });
@@ -35,7 +68,6 @@ function useParallax() {
       const { clientX, clientY } = e;
       const { innerWidth, innerHeight } = window;
 
-      // Normalizar las coordenadas del mouse (-1 a 1)
       const normalizedX = (clientX / innerWidth) * 2 - 1;
       const normalizedY = -((clientY / innerHeight) * 2 - 1);
 
@@ -43,16 +75,12 @@ function useParallax() {
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-    };
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const updateParallax = () => {
-    // Suavizar el movimiento con lerp
     const lerp = (start, end, factor) => start + (end - start) * factor;
-    const smoothFactor = 0.02; // Ajusta la suavidad del movimiento
+    const smoothFactor = 0.02;
 
     currentPosition.current.x = lerp(
       currentPosition.current.x,
@@ -89,6 +117,7 @@ export default function ImageTransitions({
   onAnimationChange,
 }) {
   const [displayedNumber, setDisplayedNumber] = useState(null);
+  const [currentMedia, setCurrentMedia] = useState(null);
   const { gl, viewport, size } = useThree();
   const meshRef = useRef();
   const wasAnimatingRef = useRef(false);
@@ -99,6 +128,9 @@ export default function ImageTransitions({
   const plane2Ref = useRef();
   const plane3Ref = useRef();
   const plane4Ref = useRef();
+
+  // Referencia para almacenar el video actual
+  const currentVideoRef = useRef(null);
 
   // Crear render targets con calidad mejorada
   const [renderTargets, setRenderTargets] = useState(null);
@@ -123,14 +155,79 @@ export default function ImageTransitions({
     [configureTexture]
   );
 
+  // Cargar media (video o imagen) según el número seleccionado
   useEffect(() => {
-    // Calcular resolución óptima basada en el canvas
+    let isCancelled = false;
+
+    const loadMedia = async () => {
+      if (displayedNumber && MEDIA_MAP[displayedNumber]) {
+        const mediaConfig = MEDIA_MAP[displayedNumber];
+
+        try {
+          // Limpiar video anterior si existe
+          if (currentVideoRef.current) {
+            currentVideoRef.current.pause();
+            currentVideoRef.current.src = "";
+            currentVideoRef.current = null;
+          }
+
+          if (mediaConfig.type === "video") {
+            console.log("Cargando video:", mediaConfig.src);
+            const { texture, video } = await createVideoTexture(
+              mediaConfig.src
+            );
+
+            if (!isCancelled) {
+              currentVideoRef.current = video;
+              setCurrentMedia(configureTexture(texture));
+            }
+          } else if (mediaConfig.type === "image") {
+            console.log("Cargando imagen:", mediaConfig.src);
+            const texture = loadImageTexture(mediaConfig.src);
+
+            if (!isCancelled) {
+              setCurrentMedia(configureTexture(texture));
+            }
+          }
+        } catch (error) {
+          console.error("Error cargando media:", error);
+          // Fallback a una imagen por defecto
+          if (!isCancelled) {
+            const fallbackTexture = loadImageTexture("cloud.jpg");
+            setCurrentMedia(configureTexture(fallbackTexture));
+          }
+        }
+      } else {
+        // Sin número seleccionado, usar imagen por defecto
+        const defaultTexture = loadImageTexture("cloud.jpg");
+        setCurrentMedia(configureTexture(defaultTexture));
+      }
+    };
+
+    loadMedia();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [displayedNumber, configureTexture]);
+
+  // Cleanup al desmontar componente
+  useEffect(() => {
+    return () => {
+      if (currentVideoRef.current) {
+        currentVideoRef.current.pause();
+        currentVideoRef.current.src = "";
+        currentVideoRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const getOptimalResolution = () => {
       const pixelRatio = gl.getPixelRatio();
       const width = Math.floor(size.width * pixelRatio);
       const height = Math.floor(size.height * pixelRatio);
 
-      // Límite máximo para evitar problemas de rendimiento
       const maxSize = 2048;
       const scale = Math.min(1, maxSize / Math.max(width, height));
 
@@ -142,7 +239,6 @@ export default function ImageTransitions({
 
     const resolution = getOptimalResolution();
 
-    // Configuración de render target con calidad óptima
     const rtConfig = {
       width: resolution.width,
       height: resolution.height,
@@ -151,7 +247,7 @@ export default function ImageTransitions({
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       generateMipmaps: false,
-      samples: gl.capabilities.isWebGL2 ? 4 : 0, // MSAA antialiasing
+      samples: gl.capabilities.isWebGL2 ? 4 : 0,
       encoding: THREE.sRGBEncoding,
     };
 
@@ -166,7 +262,6 @@ export default function ImageTransitions({
       rtConfig
     );
 
-    // Configurar las texturas para máxima calidad
     rt1.texture.generateMipmaps = false;
     rt2.texture.generateMipmaps = false;
     rt1.texture.flipY = false;
@@ -174,9 +269,6 @@ export default function ImageTransitions({
 
     setRenderTargets({ rt1, rt2 });
 
-    console.log("Render targets creados con resolución:", resolution);
-
-    // Cleanup
     return () => {
       rt1.dispose();
       rt2.dispose();
@@ -187,21 +279,19 @@ export default function ImageTransitions({
   const scene1 = useMemo(() => new THREE.Scene(), []);
   const scene2 = useMemo(() => new THREE.Scene(), []);
 
-  // Cámara ortográfica configurada para pantalla completa
   const camera = useMemo(() => {
     const cam = new THREE.OrthographicCamera(
-      -viewport.width / 2, // left
-      viewport.width / 2, // right
-      viewport.height / 2, // top
-      -viewport.height / 2, // bottom
-      0.1, // near
-      1000 // far
+      -viewport.width / 2,
+      viewport.width / 2,
+      viewport.height / 2,
+      -viewport.height / 2,
+      0.1,
+      1000
     );
     cam.position.z = 1;
     return cam;
   }, [viewport.width, viewport.height]);
 
-  // Actualizar cámara cuando cambie el viewport
   useEffect(() => {
     camera.left = -viewport.width / 2;
     camera.right = viewport.width / 2;
@@ -210,10 +300,7 @@ export default function ImageTransitions({
     camera.updateProjectionMatrix();
   }, [camera, viewport.width, viewport.height]);
 
-  // Material de transición
   const material = useMemo(() => new TransitionMaterial(), []);
-
-  // Referencias para animación
   const progress = useRef(0);
   const targetProgress = isToggled ? 1 : 0;
 
@@ -227,33 +314,28 @@ export default function ImageTransitions({
       scene2.remove(scene2.children[0]);
     }
 
-    // Calcular dimensiones para pantalla completa
     const planeWidth = viewport.width;
     const planeHeight = viewport.height;
 
-    // ESCENA 1: Imagen específica según el número mostrado
-    let texture1Path = "cloud.jpg";
-    if (displayedNumber && IMAGE_MAP[displayedNumber]) {
-      texture1Path = IMAGE_MAP[displayedNumber];
+    // ESCENA 1: Media (video o imagen) según el número mostrado
+    if (currentMedia) {
+      const planeGeometry1 = new THREE.PlaneGeometry(planeWidth, planeHeight);
+      const planeMaterial1 = new THREE.MeshBasicMaterial({
+        map: currentMedia,
+        transparent: false,
+      });
+      const plane1 = new THREE.Mesh(planeGeometry1, planeMaterial1);
+      scene1.add(plane1);
     }
 
-    const texture1 = configureTexture(loadImageTexture(texture1Path));
-    const planeGeometry1 = new THREE.PlaneGeometry(planeWidth, planeHeight);
-    const planeMaterial1 = new THREE.MeshBasicMaterial({
-      map: texture1,
-      transparent: false,
-    });
-    const plane1 = new THREE.Mesh(planeGeometry1, planeMaterial1);
-    scene1.add(plane1);
-
-    // ESCENA 2: Siempre el parallax (usando texturas memoizadas)
+    // ESCENA 2: Parallax (mismo código que antes)
     const planeGeometry2 = new THREE.PlaneGeometry(planeWidth, planeHeight);
     const planeMaterial2 = new THREE.MeshBasicMaterial({
       map: parallaxTextures.bg,
       transparent: true,
     });
     const plane2 = new THREE.Mesh(planeGeometry2, planeMaterial2);
-    plane2.position.z = -0.1; // Fondo
+    plane2.position.z = -0.1;
     scene2.add(plane2);
     plane2Ref.current = plane2;
 
@@ -263,7 +345,7 @@ export default function ImageTransitions({
       transparent: true,
     });
     const plane3 = new THREE.Mesh(planeGeometry3, planeMaterial3);
-    plane3.position.z = 0; // Medio
+    plane3.position.z = 0;
     scene2.add(plane3);
     plane3Ref.current = plane3;
 
@@ -273,22 +355,16 @@ export default function ImageTransitions({
       transparent: true,
     });
     const plane4 = new THREE.Mesh(planeGeometry4, planeMaterial4);
-    plane4.position.z = 0.1; // Frente
+    plane4.position.z = 0.1;
     scene2.add(plane4);
     plane4Ref.current = plane4;
-
-    console.log("Escenas actualizadas:");
-    console.log("- Escena 1 (imagen específica):", texture1Path);
-    console.log("- Escena 2 (parallax): BG + Clouds + Island");
   }, [
     scene1,
     scene2,
-    gl,
     viewport.width,
     viewport.height,
-    displayedNumber,
+    currentMedia,
     parallaxTextures,
-    configureTexture,
   ]);
 
   // Actualizar displayedNumber cuando selectedNumber cambia de null a número
@@ -303,6 +379,11 @@ export default function ImageTransitions({
 
     const time = state.clock.elapsedTime;
 
+    // Actualizar textura de video si existe
+    if (currentVideoRef.current && currentMedia) {
+      currentMedia.needsUpdate = true;
+    }
+
     // Animar progreso de transición
     const speed = 0.005;
     progress.current += (targetProgress - progress.current) * speed;
@@ -310,10 +391,8 @@ export default function ImageTransitions({
     let isCurrentlyAnimating;
 
     if (selectedNumber === null) {
-      // Yendo hacia parallax: usar umbral más estricto para evitar popeo
       isCurrentlyAnimating = Math.abs(progress.current - targetProgress) > 0.3;
     } else {
-      // Yendo hacia imagen específica: usar umbral más laxo para respuesta rápida
       isCurrentlyAnimating = Math.abs(progress.current - targetProgress) > 0.1;
     }
 
@@ -334,7 +413,6 @@ export default function ImageTransitions({
     // Actualizar el parallax
     const parallaxValues = updateParallax();
 
-    // Comunicar los valores del parallax al componente padre
     if (onParallaxUpdate) {
       onParallaxUpdate({
         ...parallaxValues,
@@ -342,21 +420,18 @@ export default function ImageTransitions({
       });
     }
 
-    // Aplicar diferentes intensidades de parallax a cada plano de la ESCENA 2
+    // Aplicar parallax a los planos de la ESCENA 2
     if (plane2Ref.current) {
-      // Plano de fondo - movimiento sutil (intensidad 1%)
       plane2Ref.current.position.x = parallaxValues.x * 0.01 * viewport.width;
       plane2Ref.current.position.y = parallaxValues.y * 0.01 * viewport.height;
     }
 
     if (plane3Ref.current) {
-      // Plano medio - movimiento moderado (intensidad 2%)
       plane3Ref.current.position.x = parallaxValues.x * 0.02 * viewport.width;
       plane3Ref.current.position.y = parallaxValues.y * 0.02 * viewport.height;
     }
 
     if (plane4Ref.current) {
-      // Plano frente - movimiento más pronunciado (intensidad 5%)
       plane4Ref.current.position.x = parallaxValues.x * 0.05 * viewport.width;
       plane4Ref.current.position.y = parallaxValues.y * 0.05 * viewport.height;
     }
@@ -366,7 +441,7 @@ export default function ImageTransitions({
     gl.getClearColor(currentClearColor);
     const currentClearAlpha = gl.getClearAlpha();
 
-    // Renderizar escena 1 (imagen específica) en rt1
+    // Renderizar escena 1 (video/imagen) en rt1
     gl.setRenderTarget(renderTargets.rt1);
     gl.setClearColor("#000000", 1);
     gl.clear(true, true, true);
@@ -383,7 +458,6 @@ export default function ImageTransitions({
     gl.setClearColor(currentClearColor, currentClearAlpha);
 
     // Actualizar material de transición
-    // uTexture1 = imagen específica, uTexture2 = parallax
     material.uTexture1 = renderTargets.rt1.texture;
     material.uTexture2 = renderTargets.rt2.texture;
     material.uProgress = progress.current;
