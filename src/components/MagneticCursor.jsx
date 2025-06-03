@@ -41,11 +41,11 @@ export default function MagneticCursor() {
       rotate: 0,
       opacity: 1,
       transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 20,
-        mass: 0.2,
-        rotate: { duration: 0.1 },
+        x: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
+        y: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
+        width: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
+        height: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
+        rotate: { duration: 0.1, ease: "easeOut" },
       },
     },
   };

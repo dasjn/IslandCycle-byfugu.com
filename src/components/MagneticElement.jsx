@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
-import { useMagneticCursor } from "../hooks/useMagneticCursor";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { useMagneticCursor } from "../hooks/useMagneticCursor";
 
 export default function MagneticElement({
   children,
@@ -8,6 +8,9 @@ export default function MagneticElement({
   className,
   delay = 0,
   as: Component = "button",
+  skipInitialAnimation = false,
+  onHover,
+  onLeave,
   ...props
 }) {
   const ref = useRef(null);
@@ -27,12 +30,14 @@ export default function MagneticElement({
   const handleMouseEnter = () => {
     if (ref.current) {
       setHoveredElement(ref.current.getBoundingClientRect());
+      if (onHover) onHover();
     }
   };
 
   const handleMouseLeave = () => {
     setPosition({ x: 0, y: 0 });
     setHoveredElement(null);
+    if (onLeave) onLeave();
   };
 
   return (
@@ -44,7 +49,11 @@ export default function MagneticElement({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
-      initial={{ scale: 0, opacity: 0 }}
+      initial={
+        skipInitialAnimation
+          ? { scale: 1, opacity: 1 }
+          : { scale: 0, opacity: 0 }
+      }
       animate={{
         scale: 1,
         opacity: 1,
@@ -52,8 +61,12 @@ export default function MagneticElement({
         y: position.y,
       }}
       transition={{
-        scale: { delay, duration: 0.3 },
-        opacity: { delay, duration: 0.3 },
+        scale: skipInitialAnimation
+          ? { duration: 0 }
+          : { delay, duration: 0.3 },
+        opacity: skipInitialAnimation
+          ? { duration: 0 }
+          : { delay, duration: 0.3 },
         x: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
         y: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
       }}
@@ -62,6 +75,63 @@ export default function MagneticElement({
       {...props}
     >
       {children}
+
+      {/* Brackets en las esquinas */}
+      <svg
+        className="absolute top-0 left-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
+        width="8"
+        height="8"
+        viewBox="0 0 16 16"
+      >
+        <polyline
+          points="15,1 1,1 1,15"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+        />
+      </svg>
+      <svg
+        className="absolute top-0 right-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
+        width="8"
+        height="8"
+        viewBox="0 0 16 16"
+        style={{ transform: "rotate(90deg)" }}
+      >
+        <polyline
+          points="15,1 1,1 1,15"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+        />
+      </svg>
+      <svg
+        className="absolute bottom-0 left-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
+        width="8"
+        height="8"
+        viewBox="0 0 16 16"
+        style={{ transform: "rotate(270deg)" }}
+      >
+        <polyline
+          points="15,1 1,1 1,15"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+        />
+      </svg>
+      <svg
+        className="absolute bottom-0 right-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
+        width="8"
+        height="8"
+        viewBox="0 0 16 16"
+        style={{ transform: "rotate(180deg)" }}
+      >
+        <polyline
+          points="15,1 1,1 1,15"
+          fill="none"
+          stroke="white"
+          strokeWidth="2"
+        />
+      </svg>
     </motion.div>
   );
 }

@@ -1,7 +1,30 @@
+import { useEffect } from "react";
+import MagneticElement from "./MagneticElement";
+import { useMagneticCursor } from "../hooks/useMagneticCursor";
+
 export default function BackButton({ isVisible, onBackClick }) {
+  const { setHoveredElement } = useMagneticCursor();
+
+  // Limpiar el estado del cursor cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      // Cleanup: resetear el cursor cuando el componente se desmonte
+      setHoveredElement(null);
+    };
+  }, [setHoveredElement]);
+
+  // También limpiar cuando isVisible cambie a false
+  useEffect(() => {
+    if (!isVisible) {
+      setHoveredElement(null);
+    }
+  }, [isVisible, setHoveredElement]);
+
   if (!isVisible) return null;
 
   const handleBackClick = () => {
+    // Resetear explícitamente el cursor antes de ejecutar el callback
+    setHoveredElement(null);
     if (onBackClick) {
       onBackClick();
     }
@@ -9,14 +32,15 @@ export default function BackButton({ isVisible, onBackClick }) {
 
   return (
     <div className="absolute top-6 left-6 z-[10]">
-      <button
+      <MagneticElement
         onClick={handleBackClick}
-        className="group relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white font-light text-sm tracking-wide transition-all duration-300 hover:bg-white/20 hover:border-white/40 hover:scale-105 active:scale-95"
+        className="group relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white font-light text-sm tracking-wide transition-all duration-300 hover:bg-white/20 hover:border-white/40 cursor-pointer"
+        skipInitialAnimation={false}
       >
         <div className="flex items-center gap-3">
           {/* Arrow icon */}
           <svg
-            className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"
+            className="w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -30,14 +54,12 @@ export default function BackButton({ isVisible, onBackClick }) {
           </svg>
 
           {/* Text */}
-          <span className="transition-transform duration-300 group-hover:-translate-x-1">
-            Back to Parallax
-          </span>
+          <span>Back to Parallax</span>
         </div>
 
         {/* Subtle glow effect on hover */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      </button>
+      </MagneticElement>
 
       {/* Additional context text */}
       <div className="mt-3 text-white/60 text-xs font-light tracking-wide">
