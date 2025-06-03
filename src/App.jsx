@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import CircleSelector from "./components/CircleSelector";
 import ImageTransitions from "./components/ImageTransitions";
 import BackButton from "./components/BackButton";
+import StateDescriptions from "./components/StateDescriptions";
 import { MagneticCursorProvider } from "./providers/MagneticCursorProvider";
 import MagneticCursor from "./components/MagneticCursor";
 
@@ -71,6 +72,12 @@ export default function App() {
           parallaxValues={parallaxValues}
           isVisible={!isToggled && !isAnimating}
           onNumberClick={handleNumberClick}
+        />
+
+        {/* StateDescriptions visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
+        <StateDescriptions
+          selectedNumber={selectedNumber}
+          isAnimating={isAnimating}
         />
 
         {/* BackButton visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}

@@ -20,7 +20,7 @@ export default function CircleSelector({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5] transition-none will-change-transform w-screen h-screen font-['Helvetica_Neue',Arial,sans-serif]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5] transition-none will-change-transform w-screen h-screen"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -67,7 +67,7 @@ export default function CircleSelector({
           {/* Number 1 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(1)}
-            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-6 h-6  flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-8 h-8 border-dashed border-1 border-[#fff4] flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("cloud")}
             onLeave={() => setHoveredSection(null)}
           >
@@ -120,7 +120,7 @@ export default function CircleSelector({
           {/* Number 2 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(2)}
-            className="absolute top-[46%] left-[34%] -translate-y-1/2 w-6 h-6  flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute top-[46%] left-[34%] -translate-y-1/2 w-8 h-8 border-dashed border-1 border-[#fff4] flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("rain")}
             onLeave={() => setHoveredSection(null)}
           >
@@ -162,7 +162,7 @@ export default function CircleSelector({
           {/* Number 5 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(5)}
-            className="absolute top-[45%] right-[35%] -translate-y-1/2 w-6 h-6  flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute top-[45%] right-[35%] -translate-y-1/2 w-8 h-8 border-dashed border-1 border-[#fff4]  flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("evaporation")}
             onLeave={() => setHoveredSection(null)}
           >
@@ -204,7 +204,7 @@ export default function CircleSelector({
           {/* Number 3 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(3)}
-            className="absolute bottom-[24%] left-[45%] -translate-x-1/2 w-6 h-6 flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute bottom-[24%] left-[45%] -translate-x-1/2 border-dashed border-1 border-[#fff4] w-8 h-8 flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("ground")}
             onLeave={() => setHoveredSection(null)}
           >
@@ -257,7 +257,7 @@ export default function CircleSelector({
           {/* Number 4 - Magnético */}
           <MagneticElement
             onClick={() => handleNumberClick(4)}
-            className="absolute bottom-[16%] right-[45%] translate-x-1/2 w-6 h-6 flex items-center justify-center text-[11px] text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            className="absolute bottom-[16%] right-[45%] border-dashed border-1 border-[#fff4] translate-x-1/2 w-8 h-8 text-md flex items-center justify-center text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
             onHover={() => setHoveredSection("sea")}
             onLeave={() => setHoveredSection(null)}
           >

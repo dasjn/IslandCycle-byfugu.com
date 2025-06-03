@@ -9,6 +9,26 @@ import { motion } from "framer-motion";
 export default function MagneticCursor() {
   const { mousePosition, hoveredElement } = useMagneticCursor();
 
+  // Calcular el centro del elemento magnetizado
+  const getElementCenter = () => {
+    if (!hoveredElement) return { x: 0, y: 0 };
+    return {
+      x: hoveredElement.left + hoveredElement.width / 2,
+      y: hoveredElement.top + hoveredElement.height / 2,
+    };
+  };
+
+  // Calcular offset sutil del mouse
+  const getMouseOffset = () => {
+    if (!hoveredElement) return { x: 0, y: 0 };
+    const center = getElementCenter();
+    const offsetX = (mousePosition.x - center.x) * 0.15; // Factor de 0.15 para movimiento sutil
+    const offsetY = (mousePosition.y - center.y) * 0.15;
+    return { x: offsetX, y: offsetY };
+  };
+
+  const mouseOffset = getMouseOffset();
+
   const cursorVariants = {
     default: {
       x: mousePosition.x - CURSOR_SIZE / 2,
@@ -27,10 +47,10 @@ export default function MagneticCursor() {
     },
     magnetized: {
       x: hoveredElement
-        ? hoveredElement.left - MAGNETIC_PADDING
+        ? hoveredElement.left - MAGNETIC_PADDING + mouseOffset.x
         : mousePosition.x - CURSOR_SIZE / 2,
       y: hoveredElement
-        ? hoveredElement.top - MAGNETIC_PADDING
+        ? hoveredElement.top - MAGNETIC_PADDING + mouseOffset.y
         : mousePosition.y - CURSOR_SIZE / 2,
       width: hoveredElement
         ? hoveredElement.width + MAGNETIC_PADDING * 2
@@ -41,8 +61,8 @@ export default function MagneticCursor() {
       rotate: 0,
       opacity: 1,
       transition: {
-        x: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
-        y: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
+        x: { type: "spring", stiffness: 300, damping: 25, mass: 0.2 },
+        y: { type: "spring", stiffness: 300, damping: 25, mass: 0.2 },
         width: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
         height: { type: "spring", stiffness: 200, damping: 20, mass: 0.2 },
         rotate: { duration: 0.1, ease: "easeOut" },

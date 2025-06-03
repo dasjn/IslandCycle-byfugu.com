@@ -70,68 +70,11 @@ export default function MagneticElement({
         x: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
         y: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
       }}
-      whileHover={{ scale: 1.1 }}
+      // whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       {...props}
     >
       {children}
-
-      {/* Brackets en las esquinas */}
-      <svg
-        className="absolute top-0 left-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
-        width="8"
-        height="8"
-        viewBox="0 0 16 16"
-      >
-        <polyline
-          points="15,1 1,1 1,15"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-        />
-      </svg>
-      <svg
-        className="absolute top-0 right-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
-        width="8"
-        height="8"
-        viewBox="0 0 16 16"
-        style={{ transform: "rotate(90deg)" }}
-      >
-        <polyline
-          points="15,1 1,1 1,15"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-        />
-      </svg>
-      <svg
-        className="absolute bottom-0 left-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
-        width="8"
-        height="8"
-        viewBox="0 0 16 16"
-        style={{ transform: "rotate(270deg)" }}
-      >
-        <polyline
-          points="15,1 1,1 1,15"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-        />
-      </svg>
-      <svg
-        className="absolute bottom-0 right-0 opacity-50 hover:opacity-100 transition-opacity duration-300"
-        width="8"
-        height="8"
-        viewBox="0 0 16 16"
-        style={{ transform: "rotate(180deg)" }}
-      >
-        <polyline
-          points="15,1 1,1 1,15"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-        />
-      </svg>
     </motion.div>
   );
 }
