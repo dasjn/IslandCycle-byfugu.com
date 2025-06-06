@@ -72,7 +72,7 @@ export default function MagneticCursor() {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 pointer-events-none z-[9999] border border-white/30 rounded-full"
+      className="fixed top-0 left-0 pointer-events-none z-[9999] border-none border-white/30 rounded-full"
       variants={cursorVariants}
       animate={hoveredElement ? "magnetized" : "default"}
       style={{
