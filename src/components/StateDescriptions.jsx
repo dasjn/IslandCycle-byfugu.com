@@ -55,13 +55,81 @@ const STATE_DATA = {
   },
 };
 
+// SVG del marco decorativo para el número
+const CornerFrameSvg = () => (
+  <div className="absolute inset-0">
+    {/* Bracket superior izquierdo */}
+    <svg
+      className="absolute top-0 left-0"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+    >
+      <polyline
+        points="15,1 1,1 1,15"
+        fill="none"
+        stroke="white"
+        strokeWidth="1"
+      />
+    </svg>
+
+    {/* Bracket superior derecho */}
+    <svg
+      className="absolute top-0 right-0"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      style={{ transform: "rotate(90deg)" }}
+    >
+      <polyline
+        points="15,1 1,1 1,15"
+        fill="none"
+        stroke="white"
+        strokeWidth="1"
+      />
+    </svg>
+
+    {/* Bracket inferior izquierdo */}
+    <svg
+      className="absolute bottom-0 left-0"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      style={{ transform: "rotate(270deg)" }}
+    >
+      <polyline
+        points="15,1 1,1 1,15"
+        fill="none"
+        stroke="white"
+        strokeWidth="1"
+      />
+    </svg>
+
+    {/* Bracket inferior derecho */}
+    <svg
+      className="absolute bottom-0 right-0"
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      style={{ transform: "rotate(180deg)" }}
+    >
+      <polyline
+        points="15,1 1,1 1,15"
+        fill="none"
+        stroke="white"
+        strokeWidth="1"
+      />
+    </svg>
+  </div>
+);
+
 export default function StateDescriptions({ selectedNumber, isAnimating }) {
   return (
     <AnimatePresence mode="wait">
       {selectedNumber && !isAnimating && (
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6] transition-none will-change-transform gap-16 w-screen h-screen flex items-center justify-center"
-          key={selectedNumber} // Clave única para cada estado
+          key={selectedNumber}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -121,18 +189,88 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
               </motion.p>
             </div>
 
-            <div className="text-left flex flex-col gap-4">
-              {/* Número */}
+            <div className="relative text-left flex flex-col gap-4 p-4">
+              {/* Marco decorativo del cuadro de texto */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Bracket superior izquierdo */}
+                <svg
+                  className="absolute top-0 left-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 16 16"
+                >
+                  <polyline
+                    points="15,1 1,1 1,15"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="0.8"
+                  />
+                </svg>
+
+                {/* Bracket superior derecho */}
+                <svg
+                  className="absolute top-0 right-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 16 16"
+                  style={{ transform: "rotate(90deg)" }}
+                >
+                  <polyline
+                    points="15,1 1,1 1,15"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="0.8"
+                  />
+                </svg>
+
+                {/* Bracket inferior izquierdo */}
+                <svg
+                  className="absolute bottom-0 left-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 16 16"
+                  style={{ transform: "rotate(270deg)" }}
+                >
+                  <polyline
+                    points="15,1 1,1 1,15"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="0.8"
+                  />
+                </svg>
+
+                {/* Bracket inferior derecho */}
+                <svg
+                  className="absolute bottom-0 right-0"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 16 16"
+                  style={{ transform: "rotate(180deg)" }}
+                >
+                  <polyline
+                    points="15,1 1,1 1,15"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="0.8"
+                  />
+                </svg>
+              </div>
+
+              {/* Número con marco posicionado relativamente al cuadro de texto */}
               <motion.div
-                className="inline-flex items-center justify-center w-12 h-12 border border-white/30 text-lg font-light"
+                className="absolute -top-16 -left-16 z-10"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
               >
-                {STATE_DATA[selectedNumber].number}
+                <div className="relative w-12 h-12 flex items-center justify-center">
+                  <CornerFrameSvg />
+                  <span className="relative z-10 text-white text-xl font-light">
+                    {STATE_DATA[selectedNumber].number}
+                  </span>
+                </div>
               </motion.div>
-
               {/* Descripción corta */}
               <motion.h2
                 className="text-xl md:text-2xl font-normal leading-relaxed"
