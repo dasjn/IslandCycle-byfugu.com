@@ -27,7 +27,7 @@ const geometryPool = new Map();
 // Configuración común de texturas optimizada
 const configureTexture = (texture, gl) => {
   // Fix for Three.js r152+: Use colorSpace instead of encoding
-  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.colorSpace = THREE.NoColorSpace;
   texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy()); // Reducido de 16 a 4
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
@@ -345,7 +345,7 @@ export default function ImageTransitions({
       magFilter: THREE.LinearFilter,
       generateMipmaps: false,
       samples: 0, // Desactivar MSAA para mejor rendimiento
-      colorSpace: THREE.SRGBColorSpace, // Fix for Three.js r152+
+      colorSpace: THREE.NoColorSpace, // Fix for Three.js r152+
     };
 
     // Limpiar render targets anteriores
