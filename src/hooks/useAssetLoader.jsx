@@ -20,7 +20,7 @@ const ASSETS_TO_PRELOAD = {
 };
 
 // CONFIGURACIÓN: Tiempo mínimo que se mostrará la pantalla de carga (en milisegundos)
-const MINIMUM_LOADING_TIME = 2000; // 2 segundos
+const MINIMUM_LOADING_TIME = 3000; // 2 segundos
 
 export const useAssetLoader = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);

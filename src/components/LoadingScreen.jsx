@@ -54,8 +54,8 @@ export default function LoadingScreen({
                 {/* Bracket superior izquierdo */}
                 <svg
                   className="absolute -top-4 -left-4"
-                  width="20"
-                  height="20"
+                  width="10"
+                  height="10"
                   viewBox="0 0 16 16"
                 >
                   <polyline
@@ -69,8 +69,8 @@ export default function LoadingScreen({
                 {/* Bracket superior derecho */}
                 <svg
                   className="absolute -top-4 -right-4"
-                  width="20"
-                  height="20"
+                  width="10"
+                  height="10"
                   viewBox="0 0 16 16"
                   style={{ transform: "rotate(90deg)" }}
                 >
@@ -85,8 +85,8 @@ export default function LoadingScreen({
                 {/* Bracket inferior izquierdo */}
                 <svg
                   className="absolute -bottom-4 -left-4"
-                  width="20"
-                  height="20"
+                  width="10"
+                  height="10"
                   viewBox="0 0 16 16"
                   style={{ transform: "rotate(270deg)" }}
                 >
@@ -101,8 +101,8 @@ export default function LoadingScreen({
                 {/* Bracket inferior derecho */}
                 <svg
                   className="absolute -bottom-4 -right-4"
-                  width="20"
-                  height="20"
+                  width="10"
+                  height="10"
                   viewBox="0 0 16 16"
                   style={{ transform: "rotate(180deg)" }}
                 >
