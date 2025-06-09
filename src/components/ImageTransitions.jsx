@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
+import { useDevice } from "../hooks/useDevice";
 import vertexShader from "../shaders/vertex.glsl";
 import fragmentShader from "../shaders/fragment.glsl";
 
@@ -164,21 +165,10 @@ function createVideoTexture(videoSrc, gl) {
   });
 }
 
-// Función para detectar dispositivos táctiles (memoizada)
-const isTouchDevice = (() => {
-  const result =
-    "ontouchstart" in window ||
-    navigator.maxTouchPoints > 0 ||
-    navigator.msMaxTouchPoints > 0 ||
-    window.matchMedia("(pointer: coarse)").matches;
-  return () => result;
-})();
-
 // Hook de parallax optimizado con throttling
-function useParallax() {
+function useParallax(isTouch) {
   const targetPosition = useRef({ x: 0, y: 0 });
   const currentPosition = useRef({ x: 0, y: 0 });
-  const isTouch = useMemo(() => isTouchDevice(), []);
   const lastUpdateTime = useRef(0);
 
   useEffect(() => {
@@ -221,7 +211,7 @@ function useParallax() {
     return currentPosition.current;
   }, [isTouch]);
 
-  return { updateParallax, isTouch };
+  return { updateParallax };
 }
 
 // Material optimizado con instancia única
@@ -242,6 +232,9 @@ export default function ImageTransitions({
   onParallaxUpdate,
   onAnimationChange,
 }) {
+  // Usar el hook del provider para obtener información del dispositivo
+  const { isTouch, isMobile, isTablet, deviceType } = useDevice();
+
   const [displayedNumber, setDisplayedNumber] = useState(null);
   const [currentMedia, setCurrentMedia] = useState(null);
   const [mediaDimensions, setMediaDimensions] = useState({
@@ -259,7 +252,7 @@ export default function ImageTransitions({
   const renderTargetsRef = useRef(null);
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
-  const { updateParallax, isTouch } = useParallax();
+  const { updateParallax } = useParallax(isTouch);
 
   // Cleanup de video optimizado
   const cleanupVideo = useCallback(() => {
@@ -324,7 +317,15 @@ export default function ImageTransitions({
       const pixelRatio = Math.min(gl.getPixelRatio(), 2); // Limitar pixel ratio
       const width = Math.floor(size.width * pixelRatio);
       const height = Math.floor(size.height * pixelRatio);
-      const maxSize = 1536; // Reducido de 2048 a 1536
+
+      // Ajustar resolución máxima según el tipo de dispositivo
+      let maxSize = 1536; // Default para desktop
+      if (isMobile) {
+        maxSize = 1024; // Menor resolución para móviles
+      } else if (isTablet) {
+        maxSize = 1280; // Resolución intermedia para tablets
+      }
+
       const scale = Math.min(1, maxSize / Math.max(width, height));
 
       return {
@@ -372,7 +373,7 @@ export default function ImageTransitions({
     renderTargetsRef.current = newRenderTargets;
 
     return newRenderTargets;
-  }, [size.width, size.height, gl]);
+  }, [size.width, size.height, gl, isMobile, isTablet]);
 
   // Escenas memoizadas (sin cambios, ya es eficiente)
   const scenes = useMemo(
@@ -647,7 +648,13 @@ export default function ImageTransitions({
 
     // Actualizar parallax (throttled)
     const parallaxValues = updateParallax();
-    onParallaxUpdate?.({ ...parallaxValues, viewport });
+    onParallaxUpdate?.({
+      ...parallaxValues,
+      viewport,
+      deviceType,
+      isTouch,
+      isMobile,
+    });
 
     // Aplicar parallax a planos (solo si no es touch)
     if (!isTouch) {
