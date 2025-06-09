@@ -71,9 +71,9 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
             ease: [0.25, 0.1, 0.25, 1],
           }}
         >
-          <div className="max-w-screen sm:max-w-4xl mx-auto px-8 text-center text-white flex flex-col items-center gap-16">
+          <div className="max-w-screen sm:max-w-4xl mx-auto px-8 text-center text-white flex flex-col items-center gap-12 sm:gap-16">
             {/* Elementos geométricos decorativos */}
-            <div className="flex justify-center">
+            <div className="flex justify-center scale-75 sm:scale-100">
               <CubesSvg selectedNumber={selectedNumber} />
             </div>
 
@@ -235,8 +235,8 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ delay: 0.9, duration: 0.6 }}
               >
-                <span className="mr-2">→</span>
                 <span>
+                  <span className="mr-2">→</span>
                   Deliverable examples:{" "}
                   {STATE_DATA[selectedNumber].deliverables}
                 </span>

@@ -120,6 +120,57 @@ function loadImageTexture(imagePath, gl, getPreloadedAsset) {
   return texture;
 }
 
+// Función corregida para crear un video fresco desde uno precargado
+function createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl) {
+  // CREAR UN NUEVO ELEMENTO VIDEO - NO REUTILIZAR EL PRECARGADO
+  const freshVideo = document.createElement("video");
+
+  // Copiar las propiedades básicas
+  freshVideo.src = preloadedVideo.src;
+  freshVideo.crossOrigin = "anonymous";
+  freshVideo.loop = true;
+  freshVideo.muted = true;
+  freshVideo.playsInline = true;
+  freshVideo.preload = "metadata";
+
+  return new Promise((resolve, reject) => {
+    const onCanPlay = () => {
+      freshVideo.removeEventListener("canplay", onCanPlay);
+      freshVideo.removeEventListener("error", onError);
+
+      // Crear la textura con el video fresco
+      const texture = new THREE.VideoTexture(freshVideo);
+      configureTexture(texture, gl);
+      texture.format = THREE.RGBAFormat;
+      texture.generateMipmaps = false;
+
+      // Intentar reproducir
+      freshVideo.play().catch(console.error);
+
+      const result = {
+        texture,
+        video: freshVideo,
+        width: freshVideo.videoWidth || preloadedVideo.videoWidth || 1920,
+        height: freshVideo.videoHeight || preloadedVideo.videoHeight || 1080,
+      };
+
+      resolve(result);
+    };
+
+    const onError = (e) => {
+      freshVideo.removeEventListener("canplay", onCanPlay);
+      freshVideo.removeEventListener("error", onError);
+      reject(e);
+    };
+
+    freshVideo.addEventListener("canplay", onCanPlay);
+    freshVideo.addEventListener("error", onError);
+
+    // Iniciar la carga
+    freshVideo.load();
+  });
+}
+
 // Función optimizada para videos con cache, reutilización y assets precargados
 function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
   // Primero intentar obtener el video precargado
@@ -127,31 +178,8 @@ function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
     getPreloadedAsset && getPreloadedAsset("videos", videoSrc);
 
   if (preloadedVideo) {
-    // Usar el video ya precargado
-    const texture = new THREE.VideoTexture(preloadedVideo);
-    configureTexture(texture, gl);
-    texture.format = THREE.RGBAFormat;
-    texture.generateMipmaps = false;
-
-    // Asegurar que el video esté listo para reproducir
-    preloadedVideo.loop = true;
-    preloadedVideo.muted = true;
-    preloadedVideo.playsInline = true;
-
-    if (preloadedVideo.paused && preloadedVideo.readyState >= 2) {
-      preloadedVideo.play().catch(console.error);
-    }
-
-    const result = {
-      texture,
-      video: preloadedVideo,
-      width: preloadedVideo.videoWidth,
-      height: preloadedVideo.videoHeight,
-    };
-
-    // Cachear el resultado
-    videoCache.set(videoSrc, result);
-    return Promise.resolve(result);
+    // Crear un video fresco desde el precargado para evitar problemas WebGL
+    return createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl);
   }
 
   // Fallback al método original si no hay asset precargado
@@ -286,6 +314,7 @@ export default function ImageTransitions({
 
   const [displayedNumber, setDisplayedNumber] = useState(null);
   const [currentMedia, setCurrentMedia] = useState(null);
+  const [isVideoReady, setIsVideoReady] = useState(false); // NUEVO: Estado para verificar si el video está listo
   const [mediaDimensions, setMediaDimensions] = useState({
     width: 1,
     height: 1,
@@ -303,17 +332,23 @@ export default function ImageTransitions({
 
   const { updateParallax } = useParallax(isTouch);
 
-  // Cleanup de video optimizado
+  // Cleanup de video mejorado
   const cleanupVideo = useCallback(() => {
     if (currentVideoRef.current) {
       const video = currentVideoRef.current;
-      // No pausar inmediatamente, solo cuando realmente se cambie
-      if (!videoCache.has(video.src)) {
+
+      // Pausar y limpiar el video completamente
+      try {
         video.pause();
-        video.src = "";
+        video.removeAttribute("src");
+        video.load(); // Esto fuerza a limpiar el buffer
+      } catch (error) {
+        console.warn("Error cleaning up video:", error);
       }
+
       currentVideoRef.current = null;
     }
+    setIsVideoReady(false); // NUEVO: Resetear estado de video
   }, []);
 
   // Texturas del parallax memoizadas (optimizado para evitar recreaciones y usar assets precargados)
@@ -468,6 +503,7 @@ export default function ImageTransitions({
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
           setMediaDimensions({ width: 1920, height: 1080 });
+          setIsVideoReady(true); // Las imágenes están siempre listas
         }
         return;
       }
@@ -482,18 +518,14 @@ export default function ImageTransitions({
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
           setMediaDimensions({ width: 1920, height: 1080 });
+          setIsVideoReady(true); // Las imágenes están siempre listas
         }
         return;
       }
 
       try {
-        // Solo limpiar si realmente cambiamos de video
-        if (
-          currentVideoRef.current &&
-          currentVideoRef.current.src !== mediaConfig.src
-        ) {
-          cleanupVideo();
-        }
+        // Siempre limpiar el video anterior antes de cargar uno nuevo
+        cleanupVideo();
 
         if (mediaConfig.type === "video") {
           const { texture, video, width, height } = await createVideoTexture(
@@ -508,6 +540,17 @@ export default function ImageTransitions({
               width: width || 1920,
               height: height || 1080,
             });
+
+            // NUEVO: Verificar que el video esté realmente listo
+            const checkVideoReady = () => {
+              if (video.readyState >= 2 && video.videoWidth > 0) {
+                setIsVideoReady(true);
+              } else {
+                // Esperar un poco más si no está listo
+                setTimeout(checkVideoReady, 50);
+              }
+            };
+            checkVideoReady();
           }
         } else {
           const texture = loadImageTexture(
@@ -518,6 +561,7 @@ export default function ImageTransitions({
           if (!isCancelled) {
             setCurrentMedia(texture);
             setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true); // Las imágenes están siempre listas
           }
         }
       } catch (error) {
@@ -527,6 +571,7 @@ export default function ImageTransitions({
             loadImageTexture(DEFAULT_IMAGE, gl, getPreloadedAsset)
           );
           setMediaDimensions({ width: 1920, height: 1080 });
+          setIsVideoReady(true); // Fallback siempre listo
         }
       }
     };
@@ -567,8 +612,8 @@ export default function ImageTransitions({
       viewport.height
     );
 
-    // ESCENA 1: Media con comportamiento cover
-    if (currentMedia) {
+    // ESCENA 1: Media con comportamiento cover - SOLO SI ESTÁ LISTO
+    if (currentMedia && isVideoReady) {
       const geometry1 = getGeometry(
         coverDimensions.width,
         coverDimensions.height
@@ -656,6 +701,7 @@ export default function ImageTransitions({
     parallaxTextures,
     mediaDimensions,
     isTouch,
+    isVideoReady, // NUEVO: Dependencia del estado de video listo
   ]);
 
   // Actualizar displayedNumber (sin cambios)
@@ -676,25 +722,30 @@ export default function ImageTransitions({
     };
   }, [cleanupVideo]);
 
-  // useFrame optimizado con menos cálculos por frame
+  // useFrame optimizado con validación mejorada de video
   useFrame((state) => {
     const time = state.clock.elapsedTime;
 
-    // Actualizar video texture con menos frecuencia
-    if (currentVideoRef.current && currentMedia) {
-      if (
-        currentVideoRef.current.paused &&
-        currentVideoRef.current.readyState >= 2
-      ) {
-        currentVideoRef.current.play().catch(console.error);
+    // Actualizar video texture con validación mejorada - SOLO SI ESTÁ LISTO
+    if (currentVideoRef.current && currentMedia && isVideoReady) {
+      const video = currentVideoRef.current;
+
+      // Validar que el video esté en buen estado antes de actualizar la textura
+      if (video.readyState >= 2 && !video.ended && video.videoWidth > 0) {
+        if (video.paused) {
+          video.play().catch(() => {
+            // Si falla la reproducción, no hacer nada más
+          });
+        }
+        currentMedia.needsUpdate = true;
       }
-      currentMedia.needsUpdate = true;
     }
 
     // Animar progreso (optimizado)
     const targetProgress = isToggled ? 1 : 0;
     const progressDiff = targetProgress - progressRef.current;
-    progressRef.current += progressDiff * 0.005;
+    const transitionSpeed = isTouch ? 0.015 : 0.005; // 3x más rápido en touch
+    progressRef.current += progressDiff * transitionSpeed;
 
     // Gestionar animación
     const threshold = selectedNumber === null ? 0.3 : 0.3;
@@ -736,17 +787,19 @@ export default function ImageTransitions({
       });
     }
 
-    // Renderizar escenas (optimizado)
+    // Renderizar escenas (optimizado) - SOLO SI LAS TEXTURAS ESTÁN LISTAS
     const currentRenderTarget = gl.getRenderTarget();
     const currentClearColor = new THREE.Color();
     gl.getClearColor(currentClearColor);
     const currentClearAlpha = gl.getClearAlpha();
 
-    // Renderizar solo si es necesario
-    gl.setRenderTarget(renderTargets.rt1);
-    gl.setClearColor("#000000", 1);
-    gl.clear(true, true, true);
-    gl.render(scenes.scene1, camera);
+    // Renderizar solo si es necesario y las texturas están listas
+    if (isVideoReady) {
+      gl.setRenderTarget(renderTargets.rt1);
+      gl.setClearColor("#000000", 1);
+      gl.clear(true, true, true);
+      gl.render(scenes.scene1, camera);
+    }
 
     gl.setRenderTarget(renderTargets.rt2);
     gl.setClearColor("#000000", 1);
@@ -757,8 +810,10 @@ export default function ImageTransitions({
     gl.setRenderTarget(currentRenderTarget);
     gl.setClearColor(currentClearColor, currentClearAlpha);
 
-    // Actualizar material
-    material.uniforms.uTexture1.value = renderTargets.rt1.texture;
+    // Actualizar material - SOLO SI ESTÁ LISTO
+    if (isVideoReady) {
+      material.uniforms.uTexture1.value = renderTargets.rt1.texture;
+    }
     material.uniforms.uTexture2.value = renderTargets.rt2.texture;
     material.uniforms.uProgress.value = progressRef.current;
     material.uniforms.uTime.value = time;
