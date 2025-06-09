@@ -7,8 +7,12 @@ import StateDescriptions from "./components/StateDescriptions";
 import { MagneticCursorProvider } from "./providers/MagneticCursorProvider";
 import MagneticCursor from "./components/MagneticCursor";
 import { DeviceProvider } from "./providers/DeviceProvider";
+import { useDevice } from "./hooks/useDevice";
 
-export default function App() {
+// Componente interno que usa el hook useDevice
+function AppContent() {
+  const { isTouch } = useDevice();
+
   // Estado principal: null = parallax view, number = specific image view
   const [isAnimating, setIsAnimating] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState(null);
@@ -38,57 +42,65 @@ export default function App() {
   const isToggled = selectedNumber !== null;
 
   return (
+    <div
+      style={{
+        width: "100%",
+        height: "100vh",
+        position: "relative",
+        backgroundColor: "#2d3436",
+        overflow: "hidden",
+      }}
+    >
+      {/* Solo renderizar MagneticCursor en dispositivos NO táctiles */}
+      {!isTouch && <MagneticCursor />}
+
+      <Canvas
+        orthographic
+        camera={{ position: [0, 0, 10], zoom: 1 }}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: true,
+          preserveDrawingBuffer: false, // Optimización para mejor rendimiento
+          failIfMajorPerformanceCaveat: false, // Compatibilidad mejorada
+        }}
+        dpr={[1, 2]} // Device pixel ratio adaptativo
+        performance={{ min: 0.5 }} // Auto-ajuste de rendimiento
+      >
+        <ImageTransitions
+          isToggled={isToggled}
+          selectedNumber={selectedNumber}
+          onParallaxUpdate={handleParallaxUpdate}
+          onAnimationChange={handleAnimationChange}
+        />
+      </Canvas>
+
+      {/* CircleSelector visible en la vista parallax (cuando NO hay número seleccionado) */}
+      <CircleSelector
+        parallaxValues={parallaxValues}
+        isVisible={!isToggled && !isAnimating}
+        onNumberClick={handleNumberClick}
+      />
+
+      {/* StateDescriptions visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
+      <StateDescriptions
+        selectedNumber={selectedNumber}
+        isAnimating={isAnimating}
+      />
+
+      {/* BackButton visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
+      <BackButton isVisible={isToggled} onBackClick={handleBackClick} />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <DeviceProvider>
       <MagneticCursorProvider>
-        <div
-          style={{
-            width: "100%",
-            height: "100vh",
-            position: "relative",
-            backgroundColor: "#2d3436",
-            overflow: "hidden",
-          }}
-        >
-          <MagneticCursor />
-          <Canvas
-            orthographic
-            camera={{ position: [0, 0, 10], zoom: 1 }}
-            gl={{
-              antialias: true,
-              alpha: false,
-              powerPreference: "high-performance",
-              stencil: false,
-              depth: true,
-              preserveDrawingBuffer: false, // Optimización para mejor rendimiento
-              failIfMajorPerformanceCaveat: false, // Compatibilidad mejorada
-            }}
-            dpr={[1, 2]} // Device pixel ratio adaptativo
-            performance={{ min: 0.5 }} // Auto-ajuste de rendimiento
-          >
-            <ImageTransitions
-              isToggled={isToggled}
-              selectedNumber={selectedNumber}
-              onParallaxUpdate={handleParallaxUpdate}
-              onAnimationChange={handleAnimationChange}
-            />
-          </Canvas>
-
-          {/* CircleSelector visible en la vista parallax (cuando NO hay número seleccionado) */}
-          <CircleSelector
-            parallaxValues={parallaxValues}
-            isVisible={!isToggled && !isAnimating}
-            onNumberClick={handleNumberClick}
-          />
-
-          {/* StateDescriptions visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
-          <StateDescriptions
-            selectedNumber={selectedNumber}
-            isAnimating={isAnimating}
-          />
-
-          {/* BackButton visible en la vista de imagen específica (cuando SÍ hay número seleccionado) */}
-          <BackButton isVisible={isToggled} onBackClick={handleBackClick} />
-        </div>
+        <AppContent />
       </MagneticCursorProvider>
     </DeviceProvider>
   );

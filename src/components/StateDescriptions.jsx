@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import CubesSvg from "../assets/CubesSvg";
+import NumberFrame from "./NumberFrame";
 
 // Datos de cada estado/elemento
 const STATE_DATA = {
@@ -54,74 +55,6 @@ const STATE_DATA = {
     number: "5",
   },
 };
-
-// SVG del marco decorativo para el número
-const CornerFrameSvg = () => (
-  <div className="absolute inset-0">
-    {/* Bracket superior izquierdo */}
-    <svg
-      className="absolute top-0 left-0"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-    >
-      <polyline
-        points="15,1 1,1 1,15"
-        fill="none"
-        stroke="white"
-        strokeWidth="1"
-      />
-    </svg>
-
-    {/* Bracket superior derecho */}
-    <svg
-      className="absolute top-0 right-0"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      style={{ transform: "rotate(90deg)" }}
-    >
-      <polyline
-        points="15,1 1,1 1,15"
-        fill="none"
-        stroke="white"
-        strokeWidth="1"
-      />
-    </svg>
-
-    {/* Bracket inferior izquierdo */}
-    <svg
-      className="absolute bottom-0 left-0"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      style={{ transform: "rotate(270deg)" }}
-    >
-      <polyline
-        points="15,1 1,1 1,15"
-        fill="none"
-        stroke="white"
-        strokeWidth="1"
-      />
-    </svg>
-
-    {/* Bracket inferior derecho */}
-    <svg
-      className="absolute bottom-0 right-0"
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      style={{ transform: "rotate(180deg)" }}
-    >
-      <polyline
-        points="15,1 1,1 1,15"
-        fill="none"
-        stroke="white"
-        strokeWidth="1"
-      />
-    </svg>
-  </div>
-);
 
 export default function StateDescriptions({ selectedNumber, isAnimating }) {
   return (
@@ -264,13 +197,9 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
-                <div className="relative w-12 h-12 flex items-center justify-center">
-                  <CornerFrameSvg />
-                  <span className="relative z-10 text-white text-xl font-light">
-                    {STATE_DATA[selectedNumber].number}
-                  </span>
-                </div>
+                <NumberFrame>{STATE_DATA[selectedNumber].number}</NumberFrame>
               </motion.div>
+
               {/* Descripción corta */}
               <motion.h2
                 className="text-xl md:text-2xl font-normal leading-relaxed"
