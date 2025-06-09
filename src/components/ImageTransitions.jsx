@@ -92,8 +92,22 @@ const calculateCoverDimensionsWithParallaxMargin = (
   };
 };
 
-// Función optimizada para cargar texturas con cache mejorado
-function loadImageTexture(imagePath, gl) {
+// Función optimizada para cargar texturas con cache mejorado y assets precargados
+function loadImageTexture(imagePath, gl, getPreloadedAsset) {
+  // Primero intentar obtener la imagen precargada
+  const preloadedImage =
+    getPreloadedAsset && getPreloadedAsset("images", imagePath);
+
+  if (preloadedImage) {
+    // Usar la imagen ya precargada
+    const texture = new THREE.Texture(preloadedImage);
+    configureTexture(texture, gl);
+    texture.needsUpdate = true;
+    textureCache.set(imagePath, texture);
+    return texture;
+  }
+
+  // Fallback al método original si no hay asset precargado
   if (textureCache.has(imagePath)) {
     return textureCache.get(imagePath);
   }
@@ -106,8 +120,41 @@ function loadImageTexture(imagePath, gl) {
   return texture;
 }
 
-// Función optimizada para videos con cache y reutilización
-function createVideoTexture(videoSrc, gl) {
+// Función optimizada para videos con cache, reutilización y assets precargados
+function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
+  // Primero intentar obtener el video precargado
+  const preloadedVideo =
+    getPreloadedAsset && getPreloadedAsset("videos", videoSrc);
+
+  if (preloadedVideo) {
+    // Usar el video ya precargado
+    const texture = new THREE.VideoTexture(preloadedVideo);
+    configureTexture(texture, gl);
+    texture.format = THREE.RGBAFormat;
+    texture.generateMipmaps = false;
+
+    // Asegurar que el video esté listo para reproducir
+    preloadedVideo.loop = true;
+    preloadedVideo.muted = true;
+    preloadedVideo.playsInline = true;
+
+    if (preloadedVideo.paused && preloadedVideo.readyState >= 2) {
+      preloadedVideo.play().catch(console.error);
+    }
+
+    const result = {
+      texture,
+      video: preloadedVideo,
+      width: preloadedVideo.videoWidth,
+      height: preloadedVideo.videoHeight,
+    };
+
+    // Cachear el resultado
+    videoCache.set(videoSrc, result);
+    return Promise.resolve(result);
+  }
+
+  // Fallback al método original si no hay asset precargado
   // Verificar cache de videos activos
   if (videoCache.has(videoSrc)) {
     const cachedVideo = videoCache.get(videoSrc);
@@ -232,6 +279,7 @@ export default function ImageTransitions({
   selectedNumber,
   onParallaxUpdate,
   onAnimationChange,
+  getPreloadedAsset, // Nueva prop para assets precargados
 }) {
   // Usar el hook del provider para obtener información del dispositivo
   const { isTouch, isMobile, isTablet, deviceType } = useDevice();
@@ -268,10 +316,14 @@ export default function ImageTransitions({
     }
   }, []);
 
-  // Texturas del parallax memoizadas (optimizado para evitar recreaciones)
+  // Texturas del parallax memoizadas (optimizado para evitar recreaciones y usar assets precargados)
   const parallaxTextures = useMemo(() => {
     if (isTouch) {
-      const staticTexture = loadImageTexture("TheIslandCycle_All_v04.png", gl);
+      const staticTexture = loadImageTexture(
+        "TheIslandCycle_All_v04.png",
+        gl,
+        getPreloadedAsset
+      );
       return {
         static: {
           texture: staticTexture,
@@ -283,24 +335,24 @@ export default function ImageTransitions({
 
     const textures = {
       bg: {
-        texture: loadImageTexture("BG_v03.png", gl),
+        texture: loadImageTexture("BG_v03.png", gl, getPreloadedAsset),
         width: 2500,
         height: 1080,
       },
       clouds: {
-        texture: loadImageTexture("Clouds_v01.png", gl),
+        texture: loadImageTexture("Clouds_v01.png", gl, getPreloadedAsset),
         width: 1920,
         height: 1080,
       },
       island: {
-        texture: loadImageTexture("Island_v03.png", gl),
+        texture: loadImageTexture("Island_v03.png", gl, getPreloadedAsset),
         width: 2500,
         height: 1080,
       },
     };
 
     return textures;
-  }, [gl, isTouch]);
+  }, [gl, isTouch, getPreloadedAsset]);
 
   // Render targets optimizados - solo recrear cuando sea necesario
   const renderTargets = useMemo(() => {
@@ -402,13 +454,17 @@ export default function ImageTransitions({
   // Material memoizado (optimizado)
   const material = useMemo(() => new TransitionMaterial(), []);
 
-  // Cargar media optimizado con cache mejorado
+  // Cargar media optimizado con cache mejorado y assets precargados
   useEffect(() => {
     let isCancelled = false;
 
     const loadMedia = async () => {
       if (!displayedNumber) {
-        const defaultTexture = loadImageTexture(DEFAULT_IMAGE, gl);
+        const defaultTexture = loadImageTexture(
+          DEFAULT_IMAGE,
+          gl,
+          getPreloadedAsset
+        );
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
           setMediaDimensions({ width: 1920, height: 1080 });
@@ -418,7 +474,11 @@ export default function ImageTransitions({
 
       const mediaConfig = MEDIA_MAP[displayedNumber];
       if (!mediaConfig) {
-        const defaultTexture = loadImageTexture(DEFAULT_IMAGE, gl);
+        const defaultTexture = loadImageTexture(
+          DEFAULT_IMAGE,
+          gl,
+          getPreloadedAsset
+        );
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
           setMediaDimensions({ width: 1920, height: 1080 });
@@ -438,7 +498,8 @@ export default function ImageTransitions({
         if (mediaConfig.type === "video") {
           const { texture, video, width, height } = await createVideoTexture(
             mediaConfig.src,
-            gl
+            gl,
+            getPreloadedAsset
           );
           if (!isCancelled) {
             currentVideoRef.current = video;
@@ -449,7 +510,11 @@ export default function ImageTransitions({
             });
           }
         } else {
-          const texture = loadImageTexture(mediaConfig.src, gl);
+          const texture = loadImageTexture(
+            mediaConfig.src,
+            gl,
+            getPreloadedAsset
+          );
           if (!isCancelled) {
             setCurrentMedia(texture);
             setMediaDimensions({ width: 1920, height: 1080 });
@@ -458,7 +523,9 @@ export default function ImageTransitions({
       } catch (error) {
         console.error("Error cargando media:", error);
         if (!isCancelled) {
-          setCurrentMedia(loadImageTexture(DEFAULT_IMAGE, gl));
+          setCurrentMedia(
+            loadImageTexture(DEFAULT_IMAGE, gl, getPreloadedAsset)
+          );
           setMediaDimensions({ width: 1920, height: 1080 });
         }
       }
@@ -468,7 +535,7 @@ export default function ImageTransitions({
     return () => {
       isCancelled = true;
     };
-  }, [displayedNumber, gl, cleanupVideo]);
+  }, [displayedNumber, gl, cleanupVideo, getPreloadedAsset]);
 
   // Configurar escenas optimizado con pool de geometrías
   useEffect(() => {

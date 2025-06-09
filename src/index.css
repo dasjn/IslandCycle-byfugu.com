@@ -21,6 +21,7 @@ body,
 
   /* Optimizar compositing */
   will-change: auto;
+  background-color: black;
 }
 
 canvas {
