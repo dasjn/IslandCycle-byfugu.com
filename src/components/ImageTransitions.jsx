@@ -8,7 +8,7 @@ import fragmentShader from "../shaders/fragment.glsl";
 
 // Mapeo de números a videos/imágenes para la escena 1
 const MEDIA_MAP = {
-  1: { type: "video", src: "Clouds_v01.mp4" },
+  1: { type: "video", src: "Clouds_v02.mp4" },
   2: { type: "video", src: "Rain_v01.mp4" },
   3: { type: "video", src: "Ground_v01.mp4" },
   4: { type: "video", src: "Sea_v01.mp4" },
