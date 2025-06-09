@@ -16,6 +16,14 @@ export default function CircleSelector({
     }
   };
 
+  const handleSectionHover = (section) => {
+    setHoveredSection(section);
+  };
+
+  const handleSectionLeave = () => {
+    setHoveredSection(null);
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -29,242 +37,439 @@ export default function CircleSelector({
             ease: [0.25, 0.1, 0.25, 1],
           }}
         >
-          {/* Central circle */}
+          {/* SVG Base */}
           <CircleSvg />
 
-          {/* CLOUD - Top */}
-          <motion.div
-            className="absolute top-[7%] left-1/2 -translate-x-1/2 text-center text-white pointer-events-none"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-          >
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "cloud" ? 1 : 0,
-                scale: hoveredSection === "cloud" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              THE DIGITAL IDENTITY
-            </motion.div>
-            <div className="text-5xl font-semibold">CLOUD</div>
-            <motion.div
-              className="text-xs"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "cloud" ? 1 : 0,
-                scale: hoveredSection === "cloud" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              Online presence: Website + UX
-            </motion.div>
-          </motion.div>
-
-          {/* Number 1 - Magnético */}
-          <MagneticElement
-            onClick={() => handleNumberClick(1)}
-            className="absolute top-[18%] left-1/2 -translate-x-1/2 w-8 h-8 border-dashed border-1 border-[#fff4] flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            onHover={() => setHoveredSection("cloud")}
-            onLeave={() => setHoveredSection(null)}
-          >
-            1
-          </MagneticElement>
-
-          {/* RAIN - Left */}
-          <motion.div
-            className="absolute top-[38%] left-[27%] -translate-y-1/2 text-center text-white pointer-events-none"
-            initial={{ x: -30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.8 }}
-          >
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "rain" ? 1 : 0,
-                scale: hoveredSection === "rain" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              WHERE DIGITAL &
-            </motion.div>
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "rain" ? 1 : 0,
-                scale: hoveredSection === "rain" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              PHYSICAL MEET
-            </motion.div>
-            <div className="text-5xl font-semibold">RAIN</div>
-            <motion.div
-              className="text-xs"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "rain" ? 1 : 0,
-                scale: hoveredSection === "rain" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              The cohesion across channels
-            </motion.div>
-          </motion.div>
-
-          {/* Number 2 - Magnético */}
-          <MagneticElement
-            onClick={() => handleNumberClick(2)}
-            className="absolute top-[46%] left-[34%] -translate-y-1/2 w-8 h-8 border-dashed border-1 border-[#fff4] flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            onHover={() => setHoveredSection("rain")}
-            onLeave={() => setHoveredSection(null)}
-          >
-            2
-          </MagneticElement>
-
-          {/* EVAPORATION - Right */}
-          <motion.div
-            className="absolute top-[38%] right-[23%] -translate-y-1/2 text-center text-white pointer-events-none"
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.8 }}
-          >
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "evaporation" ? 1 : 0,
-                scale: hoveredSection === "evaporation" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              MOMENTUM & GROWTH
-            </motion.div>
-            <div className="text-5xl font-semibold">EVAPORATION</div>
-            <motion.div
-              className="text-xs"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "evaporation" ? 1 : 0,
-                scale: hoveredSection === "evaporation" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              Brand evolution & updates
-            </motion.div>
-          </motion.div>
-
-          {/* Number 5 - Magnético */}
-          <MagneticElement
-            onClick={() => handleNumberClick(5)}
-            className="absolute top-[45%] right-[35%] -translate-y-1/2 w-8 h-8 border-dashed border-1 border-[#fff4]  flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            onHover={() => setHoveredSection("evaporation")}
-            onLeave={() => setHoveredSection(null)}
-          >
-            5
-          </MagneticElement>
-
-          {/* GROUND - Bottom Left */}
-          <motion.div
-            className="absolute bottom-[14%] left-[38%] -translate-x-1/2 text-center text-white pointer-events-none"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "ground" ? 1 : 0,
-                scale: hoveredSection === "ground" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              PHYSICAL IDENTITY
-            </motion.div>
-            <div className="text-5xl font-semibold">GROUND</div>
-            <motion.div
-              className="text-xs"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "ground" ? 1 : 0,
-                scale: hoveredSection === "ground" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              Offline touchpoints
-            </motion.div>
-          </motion.div>
-
-          {/* Number 3 - Magnético */}
-          <MagneticElement
-            onClick={() => handleNumberClick(3)}
-            className="absolute bottom-[24%] left-[45%] -translate-x-1/2 border-dashed border-1 border-[#fff4] w-8 h-8 flex items-center justify-center text-md text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            onHover={() => setHoveredSection("ground")}
-            onLeave={() => setHoveredSection(null)}
-          >
-            3
-          </MagneticElement>
-
-          {/* SEA - Bottom Right */}
-          <motion.div
-            className="absolute bottom-[15%] right-[38%] translate-x-1/2 text-center text-white pointer-events-none"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.35, duration: 0.8 }}
-          >
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "sea" ? 1 : 0,
-                scale: hoveredSection === "sea" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              STRUCTURE &
-            </motion.div>
-            <motion.div
-              className="text-xs font-semibold"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "sea" ? 1 : 0,
-                scale: hoveredSection === "sea" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              POSITIONING
-            </motion.div>
-            <div className="text-5xl font-semibold">SEA</div>
-            <motion.div
-              className="text-xs"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: hoveredSection === "sea" ? 1 : 0,
-                scale: hoveredSection === "sea" ? 1 : 0.8,
-              }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              Who you are and where you stand
-            </motion.div>
-          </motion.div>
-
-          {/* Number 4 - Magnético */}
-          <MagneticElement
-            onClick={() => handleNumberClick(4)}
-            className="absolute bottom-[16%] right-[45%] border-dashed border-1 border-[#fff4] translate-x-1/2 w-8 h-8 text-md flex items-center justify-center text-white/80 font-light cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
-            onHover={() => setHoveredSection("sea")}
-            onLeave={() => setHoveredSection(null)}
-          >
-            4
-          </MagneticElement>
+          {/* SVG Interactivo con Texto */}
+          <InteractiveSVG
+            hoveredSection={hoveredSection}
+            onSectionHover={handleSectionHover}
+            onSectionLeave={handleSectionLeave}
+            onNumberClick={handleNumberClick}
+          />
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// Componente SVG Interactivo
+function InteractiveSVG({
+  hoveredSection,
+  onSectionHover,
+  onSectionLeave,
+  onNumberClick,
+}) {
+  return (
+    <div className="absolute inset-0 pointer-events-none">
+      <svg
+        id="interactive-cycle"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 1301 1081"
+        className="h-svh w-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <defs>
+          <style>
+            {`
+              .cycle-text-main {
+                fill: #fff;
+                font-family: Archivo-Bold, Archivo;
+                font-weight: 700;
+                font-size: 47.94px;
+                letter-spacing: 5px;
+              }
+
+              .cycle-text-subtitle {
+                fill: #fff;
+                font-family: Archivo-Bold, Archivo;
+                font-weight: 700;
+                font-size: 12.89px;
+              }
+
+              .cycle-text-description {
+                fill: #fff;
+                font-family: Archivo-Regular, Archivo;
+                font-size: 12.1px;
+              }
+
+              .cycle-section {
+                pointer-events: none;
+              }
+
+              /* Animaciones de entrada */
+              .section-cloud {
+                animation: slideInFromTop 0.8s ease-out 0.2s both;
+              }
+              
+              .section-rain {
+                animation: slideInFromLeft 0.8s ease-out 0.25s both;
+              }
+              
+              .section-evaporation {
+                animation: slideInFromRight 0.8s ease-out 0.25s both;
+              }
+              
+              .section-ground {
+                animation: slideInFromBottom 0.8s ease-out 0.3s both;
+              }
+              
+              .section-sea {
+                animation: slideInFromBottom 0.8s ease-out 0.35s both;
+              }
+
+              @keyframes slideInFromTop {
+                from {
+                  opacity: 0;
+                  transform: translateY(-20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+
+              @keyframes slideInFromLeft {
+                from {
+                  opacity: 0;
+                  transform: translateX(-30px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateX(0);
+                }
+              }
+
+              @keyframes slideInFromRight {
+                from {
+                  opacity: 0;
+                  transform: translateX(30px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateX(0);
+                }
+              }
+
+              @keyframes slideInFromBottom {
+                from {
+                  opacity: 0;
+                  transform: translateY(20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+            `}
+          </style>
+        </defs>
+
+        {/* Cloud Section */}
+        <g className="cycle-section section-cloud" data-section="cloud">
+          <text
+            className="cycle-text-main"
+            transform="translate(555.23 133.76)"
+          >
+            <tspan x="0" y="0">
+              CLOUD
+            </tspan>
+          </text>
+
+          {/* Subtitle animado */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "cloud" ? 1 : 0,
+              scale: hoveredSection === "cloud" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-subtitle"
+              transform="translate(578.21 90.91)"
+            >
+              <tspan x="0" y="0">
+                THE DIGITAL IDENTITY
+              </tspan>
+            </text>
+          </motion.g>
+
+          {/* Description animada */}
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "cloud" ? 1 : 0,
+              scale: hoveredSection === "cloud" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-description"
+              transform="translate(567.14 151.19)"
+            >
+              <tspan x="0" y="0">
+                Online presence: Website + UX
+              </tspan>
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Rain Section */}
+        <g className="cycle-section section-rain" data-section="rain">
+          <text
+            className="cycle-text-main"
+            transform="translate(173.34 430.44)"
+          >
+            <tspan x="0" y="0">
+              RAIN
+            </tspan>
+          </text>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "rain" ? 1 : 0,
+              scale: hoveredSection === "rain" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-subtitle"
+              transform="translate(182.5 380.12)"
+            >
+              <tspan x="0" y="0">
+                WHERE DIGITAL &
+              </tspan>
+              <tspan x="5.13" y="11">
+                PHYSICAL MEET
+              </tspan>
+            </text>
+          </motion.g>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "rain" ? 1 : 0,
+              scale: hoveredSection === "rain" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-description"
+              transform="translate(159.46 447.86)"
+            >
+              <tspan x="0" y="0">
+                The cohesion across channels
+              </tspan>
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Evaporation Section */}
+        <g
+          className="cycle-section section-evaporation"
+          data-section="evaporation"
+        >
+          <text className="cycle-text-main" transform="translate(859.06 430.1)">
+            <tspan x="0" y="0">
+              EVAPORATION
+            </tspan>
+          </text>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "evaporation" ? 1 : 0,
+              scale: hoveredSection === "evaporation" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-subtitle"
+              transform="translate(982.36 387.25)"
+            >
+              <tspan x="0" y="0">
+                MOMENTUM & GROWTH
+              </tspan>
+            </text>
+          </motion.g>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "evaporation" ? 1 : 0,
+              scale: hoveredSection === "evaporation" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-description"
+              transform="translate(989.73 447.52)"
+            >
+              <tspan x="0" y="0">
+                Brand evolution & updates
+              </tspan>
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Ground Section */}
+        <g className="cycle-section section-ground" data-section="ground">
+          <text className="cycle-text-main" transform="translate(264.25 903.9)">
+            <tspan x="0" y="0">
+              GROUND
+            </tspan>
+          </text>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "ground" ? 1 : 0,
+              scale: hoveredSection === "ground" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-subtitle"
+              transform="translate(320.88 861.05)"
+            >
+              <tspan x="0" y="0">
+                PHYSICAL IDENTITY
+              </tspan>
+            </text>
+          </motion.g>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "ground" ? 1 : 0,
+              scale: hoveredSection === "ground" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-description"
+              transform="translate(335.13 921.33)"
+            >
+              <tspan x="0" y="0">
+                Offline touchpoints
+              </tspan>
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Sea Section */}
+        <g className="cycle-section section-sea" data-section="sea">
+          <text
+            className="cycle-text-main"
+            transform="translate(861.71 904.25)"
+          >
+            <tspan x="0" y="0">
+              SEA
+            </tspan>
+          </text>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "sea" ? 1 : 0,
+              scale: hoveredSection === "sea" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-subtitle"
+              transform="translate(869.43 853.7)"
+            >
+              <tspan x="0" y="0">
+                STRUCTURE &
+              </tspan>
+              <tspan x="2.99" y="11">
+                POSITIONING
+              </tspan>
+            </text>
+          </motion.g>
+
+          <motion.g
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{
+              opacity: hoveredSection === "sea" ? 1 : 0,
+              scale: hoveredSection === "sea" ? 1 : 0.8,
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <text
+              className="cycle-text-description"
+              transform="translate(826.68 921.68)"
+            >
+              <tspan x="0" y="0">
+                Who you are and where you stand
+              </tspan>
+            </text>
+          </motion.g>
+        </g>
+
+        {/* Elementos Magnéticos integrados en SVG */}
+        {/* Number 1 - Cloud */}
+        <foreignObject x="580" y="200" width="48" height="48">
+          <MagneticElement
+            onClick={() => onNumberClick(1)}
+            className="w-12 h-12 border-dashed border-1 border-[#fff4] flex items-center justify-center text-2xl text-white/80 font-normal cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            onHover={() => onSectionHover("cloud")}
+            onLeave={() => onSectionLeave()}
+          >
+            1
+          </MagneticElement>
+        </foreignObject>
+
+        {/* Number 2 - Rain */}
+        <foreignObject x="300" y="500" width="48" height="48">
+          <MagneticElement
+            onClick={() => onNumberClick(2)}
+            className="w-12 h-12 border-dashed border-1 border-[#fff4] flex items-center justify-center text-2xl text-white/80 font-normal cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            onHover={() => onSectionHover("rain")}
+            onLeave={() => onSectionLeave()}
+          >
+            2
+          </MagneticElement>
+        </foreignObject>
+
+        {/* Number 3 - Ground */}
+        <foreignObject x="490" y="735" width="48" height="48">
+          <MagneticElement
+            onClick={() => onNumberClick(3)}
+            className="w-12 h-12 border-dashed border-1 border-[#fff4] flex items-center justify-center text-2xl text-white/80 font-normal cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            onHover={() => onSectionHover("ground")}
+            onLeave={() => onSectionLeave()}
+          >
+            3
+          </MagneticElement>
+        </foreignObject>
+
+        {/* Number 4 - Sea */}
+        <foreignObject x="690" y="880" width="48" height="48">
+          <MagneticElement
+            onClick={() => onNumberClick(4)}
+            className="w-12 h-12 border-dashed border-1 border-[#fff4] flex items-center justify-center text-2xl text-white/80 font-normal cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            onHover={() => onSectionHover("sea")}
+            onLeave={() => onSectionLeave()}
+          >
+            4
+          </MagneticElement>
+        </foreignObject>
+
+        {/* Number 5 - Evaporation */}
+        <foreignObject x="960" y="480" width="48" height="48">
+          <MagneticElement
+            onClick={() => onNumberClick(5)}
+            className="w-12 h-12 border-dashed border-1 border-[#fff4] flex items-center justify-center text-2xl text-white/80 font-normal cursor-pointer hover:text-white hover:bg-white/10 transition-all duration-300 pointer-events-auto"
+            onHover={() => onSectionHover("evaporation")}
+            onLeave={() => onSectionLeave()}
+          >
+            5
+          </MagneticElement>
+        </foreignObject>
+      </svg>
+    </div>
   );
 }

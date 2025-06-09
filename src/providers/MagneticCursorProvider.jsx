@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { MagneticCursorContext } from "../context/MagneticCursorContext";
 
 export function MagneticCursorProvider({ children }) {
@@ -6,21 +6,46 @@ export function MagneticCursorProvider({ children }) {
   const [hoveredElement, setHoveredElement] = useState(null);
 
   useEffect(() => {
-    const handleMouseMove = (event) => {
-      setMousePosition({ x: event.clientX, y: event.clientY });
+    // Usar requestAnimationFrame para throttling optimizado del mouse tracking
+    let rafId = null;
+    let pendingPosition = null;
+
+    const throttledMouseMove = (event) => {
+      // Guardar la posición más reciente
+      pendingPosition = { x: event.clientX, y: event.clientY };
+
+      // Solo programar una actualización si no hay una pendiente
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          if (pendingPosition) {
+            setMousePosition(pendingPosition);
+            pendingPosition = null;
+          }
+          rafId = null;
+        });
+      }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    // Usar passive: true para mejor rendimiento
+    window.addEventListener("mousemove", throttledMouseMove, { passive: true });
+
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousemove", throttledMouseMove);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 
-  const value = {
-    mousePosition,
-    hoveredElement,
-    setHoveredElement,
-  };
+  // Memoizar el valor del contexto para evitar re-renders innecesarios
+  const value = useMemo(
+    () => ({
+      mousePosition,
+      hoveredElement,
+      setHoveredElement,
+    }),
+    [mousePosition, hoveredElement]
+  );
 
   return (
     <MagneticCursorContext.Provider value={value}>

@@ -8,10 +8,174 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
+
+  /* Optimizaciones de rendimiento GPU */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Optimizar compositing */
+  will-change: auto;
 }
 
 canvas {
   display: block;
   width: 100%;
   height: 100%;
+
+  /* Optimizaciones de GPU para el canvas */
+  transform: translateZ(0);
+  will-change: transform;
+
+  /* Prevenir anti-aliasing innecesario en algunos navegadores */
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+}
+
+/* Optimizar elementos animados de Framer Motion */
+.motion-div,
+[data-framer-name] {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Optimizar elementos magnéticos */
+.magnetic-element {
+  contain: layout style paint;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimizar elementos que usan backdrop-blur */
+.backdrop-blur-md,
+.backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  /* Forzar aceleración de hardware */
+  transform: translateZ(0);
+  will-change: backdrop-filter;
+}
+
+/* Optimizar elementos con position fixed/absolute */
+.fixed,
+.absolute {
+  /* Crear un nuevo contexto de apilamiento para mejor compositing */
+  transform: translateZ(0);
+}
+
+/* Optimizar transiciones */
+.transition-all,
+.transition-opacity,
+.transition-transform {
+  /* Usar aceleración de hardware para transiciones */
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Optimizar elementos con hover effects */
+.hover\:bg-white\/10:hover,
+.hover\:bg-white\/20:hover,
+.hover\:border-white\/40:hover {
+  /* Preparar para cambios de color */
+  will-change: background-color, border-color;
+}
+
+/* Optimizar elementos con scale animations */
+.hover\:scale-110:hover,
+.group:hover .group-hover\:scale-110 {
+  /* Preparar para transformaciones de escala */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimizar SVG icons */
+svg {
+  /* Mejorar renderizado de SVG */
+  shape-rendering: geometricPrecision;
+  text-rendering: optimizeLegibility;
+
+  /* Acelerar animaciones de SVG */
+  transform: translateZ(0);
+}
+
+/* Optimizar elementos con gradientes */
+.bg-gradient-to-r,
+.bg-gradient-to-l {
+  /* Acelerar renderizado de gradientes */
+  transform: translateZ(0);
+  will-change: background;
+}
+
+/* Prevenir layout thrashing en elementos responsivos */
+.w-screen,
+.h-screen,
+.w-full,
+.h-full {
+  /* Optimizar elementos de tamaño completo */
+  contain: layout;
+}
+
+/* Optimizar elementos con z-index alto */
+.z-\[5\],
+.z-\[6\],
+.z-\[10\],
+.z-\[9999\] {
+  /* Crear contextos de apilamiento optimizados */
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* Optimizar texto para mejor rendimiento */
+.text-5xl,
+.text-6xl,
+.font-bold,
+.font-semibold {
+  /* Optimizar renderizado de texto grande */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimizar elementos con border-radius */
+.rounded-full,
+.rounded-md,
+.rounded-lg {
+  /* Acelerar elementos con bordes redondeados */
+  transform: translateZ(0);
+}
+
+/* Media queries para optimizaciones específicas por dispositivo */
+@media (max-width: 768px) {
+  /* Optimizaciones adicionales para móviles */
+  * {
+    /* Reducir complejidad en dispositivos móviles */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .motion-div {
+    /* Reducir will-change en móviles para ahorrar memoria */
+    will-change: transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Respetar preferencias de usuario para movimiento reducido */
+  .motion-div,
+  .transition-all {
+    will-change: auto;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Optimizar scroll performance (aunque está deshabilitado) */
+.overflow-hidden {
+  /* Asegurar que no hay scroll innecesario */
+  overscroll-behavior: none;
 }

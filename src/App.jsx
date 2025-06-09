@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import CircleSelector from "./components/CircleSelector";
 import ImageTransitions from "./components/ImageTransitions";
@@ -13,23 +13,24 @@ export default function App() {
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [parallaxValues, setParallaxValues] = useState(null);
 
-  const handleAnimationChange = (animating) => {
+  // Memoizar callbacks para evitar re-renders innecesarios en componentes hijos
+  const handleAnimationChange = useCallback((animating) => {
     setIsAnimating(animating);
-  };
+  }, []);
 
-  const handleNumberClick = (number) => {
+  const handleNumberClick = useCallback((number) => {
     console.log("Number clicked:", number);
     setSelectedNumber(number);
-  };
+  }, []);
 
-  const handleBackClick = () => {
+  const handleBackClick = useCallback(() => {
     console.log("Back clicked, returning to parallax");
     setSelectedNumber(null);
-  };
+  }, []);
 
-  const handleParallaxUpdate = (values) => {
+  const handleParallaxUpdate = useCallback((values) => {
     setParallaxValues(values);
-  };
+  }, []);
 
   // isToggled = true cuando hay un número seleccionado (muestra imagen específica)
   // isToggled = false cuando selectedNumber es null (muestra parallax + CircleSelector)
@@ -56,8 +57,11 @@ export default function App() {
             powerPreference: "high-performance",
             stencil: false,
             depth: true,
+            preserveDrawingBuffer: false, // Optimización para mejor rendimiento
+            failIfMajorPerformanceCaveat: false, // Compatibilidad mejorada
           }}
           dpr={[1, 2]} // Device pixel ratio adaptativo
+          performance={{ min: 0.5 }} // Auto-ajuste de rendimiento
         >
           <ImageTransitions
             isToggled={isToggled}

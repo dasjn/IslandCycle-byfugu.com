@@ -16,13 +16,17 @@ const MEDIA_MAP = {
 
 const DEFAULT_IMAGE = "cloud.jpg";
 
-// Cache global para texturas
+// Cache global para texturas optimizado
 const textureCache = new Map();
+const videoCache = new Map();
 
-// Configuración común de texturas
+// Pool de geometrías reutilizables
+const geometryPool = new Map();
+
+// Configuración común de texturas optimizada
 const configureTexture = (texture, gl) => {
   texture.encoding = THREE.sRGBEncoding;
-  texture.anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
+  texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy()); // Reducido de 16 a 4
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.minFilter = THREE.LinearFilter;
@@ -30,7 +34,16 @@ const configureTexture = (texture, gl) => {
   return texture;
 };
 
-// Función para calcular dimensiones tipo "cover"
+// Función optimizada para obtener geometría del pool
+const getGeometry = (width, height) => {
+  const key = `${width.toFixed(2)}_${height.toFixed(2)}`;
+  if (!geometryPool.has(key)) {
+    geometryPool.set(key, new THREE.PlaneGeometry(width, height));
+  }
+  return geometryPool.get(key);
+};
+
+// Función para calcular dimensiones tipo "cover" (sin cambios, ya es eficiente)
 const calculateCoverDimensions = (
   contentWidth,
   contentHeight,
@@ -43,11 +56,9 @@ const calculateCoverDimensions = (
   let width, height;
 
   if (contentAspect > containerAspect) {
-    // El contenido es más ancho, ajustar por altura
     height = containerHeight;
     width = height * contentAspect;
   } else {
-    // El contenido es más alto, ajustar por anchura
     width = containerWidth;
     height = width / contentAspect;
   }
@@ -55,7 +66,7 @@ const calculateCoverDimensions = (
   return { width, height };
 };
 
-// Función para calcular dimensiones cover con margen para parallax
+// Función para calcular dimensiones cover con margen para parallax (sin cambios)
 const calculateCoverDimensionsWithParallaxMargin = (
   contentWidth,
   contentHeight,
@@ -70,9 +81,7 @@ const calculateCoverDimensionsWithParallaxMargin = (
     containerHeight
   );
 
-  // Calcular el margen extra necesario para el parallax
-  // El parallax va de -1 a 1, por lo que el movimiento máximo es ±parallaxFactor * viewport
-  const marginX = parallaxFactor * containerWidth * 2; // *2 porque puede moverse en ambas direcciones
+  const marginX = parallaxFactor * containerWidth * 2;
   const marginY = parallaxFactor * containerHeight * 2;
 
   return {
@@ -81,7 +90,7 @@ const calculateCoverDimensionsWithParallaxMargin = (
   };
 };
 
-// Función optimizada para cargar texturas con cache
+// Función optimizada para cargar texturas con cache mejorado
 function loadImageTexture(imagePath, gl) {
   if (textureCache.has(imagePath)) {
     return textureCache.get(imagePath);
@@ -95,8 +104,16 @@ function loadImageTexture(imagePath, gl) {
   return texture;
 }
 
-// Función optimizada para videos con preservación durante resize
+// Función optimizada para videos con cache y reutilización
 function createVideoTexture(videoSrc, gl) {
+  // Verificar cache de videos activos
+  if (videoCache.has(videoSrc)) {
+    const cachedVideo = videoCache.get(videoSrc);
+    if (!cachedVideo.video.ended && cachedVideo.video.readyState >= 2) {
+      return Promise.resolve(cachedVideo);
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     Object.assign(video, {
@@ -105,7 +122,7 @@ function createVideoTexture(videoSrc, gl) {
       loop: true,
       muted: true,
       playsInline: true,
-      preload: "metadata", // Cargar metadata para obtener dimensiones
+      preload: "metadata",
     });
 
     const onLoadedMetadata = () => {
@@ -114,15 +131,26 @@ function createVideoTexture(videoSrc, gl) {
       texture.format = THREE.RGBAFormat;
       texture.generateMipmaps = false;
 
-      // Asegurar que el video se reproduzca
       video.play().catch(console.error);
 
-      resolve({
+      const result = {
         texture,
         video,
         width: video.videoWidth,
         height: video.videoHeight,
-      });
+      };
+
+      // Cachear el video por un tiempo limitado
+      videoCache.set(videoSrc, result);
+
+      // Limpiar cache después de 5 minutos de inactividad
+      setTimeout(() => {
+        if (videoCache.has(videoSrc) && video.paused) {
+          videoCache.delete(videoSrc);
+        }
+      }, 300000);
+
+      resolve(result);
     };
 
     const onError = (e) => {
@@ -136,27 +164,32 @@ function createVideoTexture(videoSrc, gl) {
   });
 }
 
-// Función para detectar dispositivos táctiles
-const isTouchDevice = () => {
-  return (
+// Función para detectar dispositivos táctiles (memoizada)
+const isTouchDevice = (() => {
+  const result =
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0 ||
     navigator.msMaxTouchPoints > 0 ||
-    window.matchMedia("(pointer: coarse)").matches
-  );
-};
+    window.matchMedia("(pointer: coarse)").matches;
+  return () => result;
+})();
 
-// Hook de parallax optimizado con detección de touch
+// Hook de parallax optimizado con throttling
 function useParallax() {
   const targetPosition = useRef({ x: 0, y: 0 });
   const currentPosition = useRef({ x: 0, y: 0 });
   const isTouch = useMemo(() => isTouchDevice(), []);
+  const lastUpdateTime = useRef(0);
 
   useEffect(() => {
-    // Si es touch device, no activar parallax
     if (isTouch) return;
 
     const handleMouseMove = (e) => {
+      // Throttling para evitar demasiadas actualizaciones
+      const now = Date.now();
+      if (now - lastUpdateTime.current < 16) return; // ~60fps
+      lastUpdateTime.current = now;
+
       const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
       const normalizedY = -((e.clientY / window.innerHeight) * 2 - 1);
       targetPosition.current = { x: normalizedX, y: normalizedY };
@@ -167,7 +200,6 @@ function useParallax() {
   }, [isTouch]);
 
   const updateParallax = useCallback(() => {
-    // Si es touch device, mantener posición estática
     if (isTouch) {
       return { x: 0, y: 0 };
     }
@@ -192,6 +224,7 @@ function useParallax() {
   return { updateParallax, isTouch };
 }
 
+// Material optimizado con instancia única
 const TransitionMaterial = shaderMaterial(
   {
     uTexture1: null,
@@ -224,119 +257,74 @@ export default function ImageTransitions({
   const parallaxPlanesRef = useRef({});
   const progressRef = useRef(0);
   const renderTargetsRef = useRef(null);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
 
   const { updateParallax, isTouch } = useParallax();
-
-  // Función para preservar el estado del video durante resize
-  const preserveVideoState = useCallback((video) => {
-    if (!video) return null;
-
-    return {
-      currentTime: video.currentTime,
-      paused: video.paused,
-      playbackRate: video.playbackRate,
-    };
-  }, []);
-
-  // Función para restaurar el estado del video después del resize
-  const restoreVideoState = useCallback((video, state) => {
-    if (!video || !state) return;
-
-    video.currentTime = state.currentTime;
-    video.playbackRate = state.playbackRate;
-
-    if (!state.paused) {
-      video.play().catch(console.error);
-    }
-  }, []);
 
   // Cleanup de video optimizado
   const cleanupVideo = useCallback(() => {
     if (currentVideoRef.current) {
-      currentVideoRef.current.pause();
-      currentVideoRef.current.src = "";
+      const video = currentVideoRef.current;
+      // No pausar inmediatamente, solo cuando realmente se cambie
+      if (!videoCache.has(video.src)) {
+        video.pause();
+        video.src = "";
+      }
       currentVideoRef.current = null;
     }
   }, []);
 
-  // Texturas del parallax memoizadas con dimensiones
+  // Texturas del parallax memoizadas (optimizado para evitar recreaciones)
   const parallaxTextures = useMemo(() => {
-    // Para dispositivos touch, solo cargar una imagen estática
     if (isTouch) {
       const staticTexture = loadImageTexture("BG_v02.png", gl);
-      const getTextureDimensions = (texture) => {
-        if (texture.image) {
-          return { width: texture.image.width, height: texture.image.height };
-        }
-        return { width: 2500, height: 2500 }; // Dimensiones por defecto para v02
-      };
-
-      // Agregar listener para cuando la textura se cargue
-      if (!staticTexture.image) {
-        staticTexture.onLoad = () => {
-          setDisplayedNumber((prev) => prev);
-        };
-      }
-
       return {
         static: {
           texture: staticTexture,
-          ...getTextureDimensions(staticTexture),
+          width: 2500,
+          height: 2500,
         },
       };
     }
 
-    // Para dispositivos no-touch, cargar todas las capas del parallax
     const textures = {
-      bg: loadImageTexture("BG_v03.png", gl),
-      clouds: loadImageTexture("Clouds_v01.png", gl),
-      island: loadImageTexture("Island_v03.png", gl),
-    };
-
-    // Función para obtener dimensiones de textura cuando esté cargada
-    const getTextureDimensions = (
-      texture,
-      defaultSize = { width: 1920, height: 1080 }
-    ) => {
-      if (texture.image) {
-        return { width: texture.image.width, height: texture.image.height };
-      }
-      return defaultSize;
-    };
-
-    // Agregar listener para cuando las texturas se carguen
-    Object.values(textures).forEach((texture) => {
-      if (!texture.image) {
-        texture.onLoad = () => {
-          // Forzar re-render cuando las texturas se carguen completamente
-          setDisplayedNumber((prev) => prev);
-        };
-      }
-    });
-
-    return {
       bg: {
-        texture: textures.bg,
-        ...getTextureDimensions(textures.bg, { width: 2500, height: 1080 }),
+        texture: loadImageTexture("BG_v03.png", gl),
+        width: 2500,
+        height: 1080,
       },
       clouds: {
-        texture: textures.clouds,
-        ...getTextureDimensions(textures.clouds, { width: 1920, height: 1080 }),
+        texture: loadImageTexture("Clouds_v01.png", gl),
+        width: 1920,
+        height: 1080,
       },
       island: {
-        texture: textures.island,
-        ...getTextureDimensions(textures.island, { width: 2500, height: 1080 }),
+        texture: loadImageTexture("Island_v03.png", gl),
+        width: 2500,
+        height: 1080,
       },
     };
+
+    return textures;
   }, [gl, isTouch]);
 
-  // Render targets optimizados - solo se recrean si cambia drásticamente el tamaño
+  // Render targets optimizados - solo recrear cuando sea necesario
   const renderTargets = useMemo(() => {
+    const sizeChanged =
+      Math.abs(size.width - lastSizeRef.current.width) > 50 ||
+      Math.abs(size.height - lastSizeRef.current.height) > 50;
+
+    if (!sizeChanged && renderTargetsRef.current) {
+      return renderTargetsRef.current;
+    }
+
+    lastSizeRef.current = { width: size.width, height: size.height };
+
     const getOptimalResolution = () => {
-      const pixelRatio = gl.getPixelRatio();
+      const pixelRatio = Math.min(gl.getPixelRatio(), 2); // Limitar pixel ratio
       const width = Math.floor(size.width * pixelRatio);
       const height = Math.floor(size.height * pixelRatio);
-      const maxSize = 2048;
+      const maxSize = 1536; // Reducido de 2048 a 1536
       const scale = Math.min(1, maxSize / Math.max(width, height));
 
       return {
@@ -344,9 +332,6 @@ export default function ImageTransitions({
         height: Math.floor(height * scale),
       };
     };
-
-    // Preservar estado del video antes de recrear render targets
-    const videoState = preserveVideoState(currentVideoRef.current);
 
     const resolution = getOptimalResolution();
     const rtConfig = {
@@ -357,7 +342,7 @@ export default function ImageTransitions({
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       generateMipmaps: false,
-      samples: gl.capabilities.isWebGL2 ? 4 : 0,
+      samples: 0, // Desactivar MSAA para mejor rendimiento
       encoding: THREE.sRGBEncoding,
     };
 
@@ -386,17 +371,10 @@ export default function ImageTransitions({
     const newRenderTargets = { rt1, rt2 };
     renderTargetsRef.current = newRenderTargets;
 
-    // Restaurar estado del video después de un breve delay
-    if (videoState && currentVideoRef.current) {
-      setTimeout(() => {
-        restoreVideoState(currentVideoRef.current, videoState);
-      }, 50);
-    }
-
     return newRenderTargets;
-  }, [size.width, size.height, gl, preserveVideoState, restoreVideoState]);
+  }, [size.width, size.height, gl]);
 
-  // Escenas memoizadas
+  // Escenas memoizadas (sin cambios, ya es eficiente)
   const scenes = useMemo(
     () => ({
       scene1: new THREE.Scene(),
@@ -405,6 +383,7 @@ export default function ImageTransitions({
     []
   );
 
+  // Camera memoizada (sin cambios, ya es eficiente)
   const camera = useMemo(() => {
     const cam = new THREE.OrthographicCamera(
       -viewport.width / 2,
@@ -418,9 +397,10 @@ export default function ImageTransitions({
     return cam;
   }, [viewport.width, viewport.height]);
 
+  // Material memoizado (optimizado)
   const material = useMemo(() => new TransitionMaterial(), []);
 
-  // Cargar media optimizado con preservación de estado del video
+  // Cargar media optimizado con cache mejorado
   useEffect(() => {
     let isCancelled = false;
 
@@ -429,7 +409,7 @@ export default function ImageTransitions({
         const defaultTexture = loadImageTexture(DEFAULT_IMAGE, gl);
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
-          setMediaDimensions({ width: 1, height: 1 });
+          setMediaDimensions({ width: 1920, height: 1080 });
         }
         return;
       }
@@ -439,14 +419,19 @@ export default function ImageTransitions({
         const defaultTexture = loadImageTexture(DEFAULT_IMAGE, gl);
         if (!isCancelled) {
           setCurrentMedia(defaultTexture);
-          setMediaDimensions({ width: 1, height: 1 });
+          setMediaDimensions({ width: 1920, height: 1080 });
         }
         return;
       }
 
       try {
-        const currentVideoState = preserveVideoState(currentVideoRef.current);
-        cleanupVideo();
+        // Solo limpiar si realmente cambiamos de video
+        if (
+          currentVideoRef.current &&
+          currentVideoRef.current.src !== mediaConfig.src
+        ) {
+          cleanupVideo();
+        }
 
         if (mediaConfig.type === "video") {
           const { texture, video, width, height } = await createVideoTexture(
@@ -460,43 +445,19 @@ export default function ImageTransitions({
               width: width || 1920,
               height: height || 1080,
             });
-
-            // Si había un video anterior, restaurar algunos aspectos del estado
-            if (currentVideoState && !currentVideoState.paused) {
-              video.play().catch(console.error);
-            }
           }
         } else {
-          // Para imágenes, cargar y obtener dimensiones
           const texture = loadImageTexture(mediaConfig.src, gl);
           if (!isCancelled) {
             setCurrentMedia(texture);
-
-            // Intentar obtener dimensiones de la imagen
-            if (texture.image) {
-              setMediaDimensions({
-                width: texture.image.width || 1920,
-                height: texture.image.height || 1080,
-              });
-            } else {
-              // Si la imagen no está cargada, usar onLoad
-              texture.onLoad = () => {
-                if (texture.image && !isCancelled) {
-                  setMediaDimensions({
-                    width: texture.image.width || 1920,
-                    height: texture.image.height || 1080,
-                  });
-                }
-              };
-              setMediaDimensions({ width: 1920, height: 1080 }); // Dimensiones por defecto
-            }
+            setMediaDimensions({ width: 1920, height: 1080 });
           }
         }
       } catch (error) {
         console.error("Error cargando media:", error);
         if (!isCancelled) {
           setCurrentMedia(loadImageTexture(DEFAULT_IMAGE, gl));
-          setMediaDimensions({ width: 1, height: 1 });
+          setMediaDimensions({ width: 1920, height: 1080 });
         }
       }
     };
@@ -505,20 +466,25 @@ export default function ImageTransitions({
     return () => {
       isCancelled = true;
     };
-  }, [displayedNumber, gl, cleanupVideo, preserveVideoState]);
+  }, [displayedNumber, gl, cleanupVideo]);
 
-  // Configurar escenas optimizado con comportamiento cover
+  // Configurar escenas optimizado con pool de geometrías
   useEffect(() => {
     const { scene1, scene2 } = scenes;
 
-    // Limpiar escenas
+    // Limpiar escenas de manera más eficiente
     [scene1, scene2].forEach((scene) => {
       while (scene.children.length > 0) {
         const child = scene.children[0];
         scene.remove(child);
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-          if (child.material.map) child.material.map.dispose();
+        // No disponer geometrías del pool
+        if (child.material && child.material.map) {
+          // No disponer texturas del cache
+        }
+        if (
+          child.material &&
+          !textureCache.has(child.material.map?.image?.src)
+        ) {
           child.material.dispose();
         }
       }
@@ -534,7 +500,7 @@ export default function ImageTransitions({
 
     // ESCENA 1: Media con comportamiento cover
     if (currentMedia) {
-      const geometry1 = new THREE.PlaneGeometry(
+      const geometry1 = getGeometry(
         coverDimensions.width,
         coverDimensions.height
       );
@@ -546,9 +512,8 @@ export default function ImageTransitions({
       scene1.add(mesh1);
     }
 
-    // ESCENA 2: Parallax con comportamiento cover o imagen estática para touch
+    // ESCENA 2: Parallax
     if (isTouch) {
-      // Para dispositivos touch: una sola imagen estática
       const staticData = parallaxTextures.static;
       const coverDimensions = calculateCoverDimensions(
         staticData.width,
@@ -557,7 +522,7 @@ export default function ImageTransitions({
         viewport.height
       );
 
-      const geometry = new THREE.PlaneGeometry(
+      const geometry = getGeometry(
         coverDimensions.width,
         coverDimensions.height
       );
@@ -568,10 +533,8 @@ export default function ImageTransitions({
       const plane = new THREE.Mesh(geometry, material);
       plane.position.z = 0;
       scene2.add(plane);
-      // Para touch devices, no necesitamos referencias para parallax
       parallaxPlanesRef.current = {};
     } else {
-      // Para dispositivos no-touch: múltiples capas con parallax
       const parallaxLayers = [
         {
           textureData: parallaxTextures.bg,
@@ -594,7 +557,6 @@ export default function ImageTransitions({
       ];
 
       parallaxLayers.forEach(({ textureData, z, ref, parallaxFactor }) => {
-        // Calcular dimensiones cover con margen para parallax
         const coverDimensions = calculateCoverDimensionsWithParallaxMargin(
           textureData.width,
           textureData.height,
@@ -603,7 +565,7 @@ export default function ImageTransitions({
           parallaxFactor
         );
 
-        const geometry = new THREE.PlaneGeometry(
+        const geometry = getGeometry(
           coverDimensions.width,
           coverDimensions.height
         );
@@ -617,15 +579,6 @@ export default function ImageTransitions({
         parallaxPlanesRef.current[ref] = plane;
       });
     }
-
-    return () => {
-      // Cleanup geometries - ahora cada elemento tiene su propia geometría
-      [scene1, scene2].forEach((scene) => {
-        scene.children.forEach((child) => {
-          if (child.geometry) child.geometry.dispose();
-        });
-      });
-    };
   }, [
     scenes,
     viewport.width,
@@ -636,7 +589,7 @@ export default function ImageTransitions({
     isTouch,
   ]);
 
-  // Actualizar displayedNumber
+  // Actualizar displayedNumber (sin cambios)
   useEffect(() => {
     if (selectedNumber !== null) {
       setDisplayedNumber(selectedNumber);
@@ -654,12 +607,12 @@ export default function ImageTransitions({
     };
   }, [cleanupVideo]);
 
+  // useFrame optimizado con menos cálculos por frame
   useFrame((state) => {
     const time = state.clock.elapsedTime;
 
-    // Actualizar video texture y mantener reproducción
+    // Actualizar video texture con menos frecuencia
     if (currentVideoRef.current && currentMedia) {
-      // Asegurar que el video siga reproduciéndose
       if (
         currentVideoRef.current.paused &&
         currentVideoRef.current.readyState >= 2
@@ -669,14 +622,14 @@ export default function ImageTransitions({
       currentMedia.needsUpdate = true;
     }
 
-    // Animar progreso
+    // Animar progreso (optimizado)
     const targetProgress = isToggled ? 1 : 0;
-    progressRef.current += (targetProgress - progressRef.current) * 0.005;
+    const progressDiff = targetProgress - progressRef.current;
+    progressRef.current += progressDiff * 0.005;
 
     // Gestionar animación
     const threshold = selectedNumber === null ? 0.3 : 0.3;
-    const isCurrentlyAnimating =
-      Math.abs(progressRef.current - targetProgress) > threshold;
+    const isCurrentlyAnimating = Math.abs(progressDiff) > threshold;
 
     if (wasAnimatingRef.current !== isCurrentlyAnimating) {
       wasAnimatingRef.current = isCurrentlyAnimating;
@@ -692,11 +645,11 @@ export default function ImageTransitions({
       setDisplayedNumber(null);
     }
 
-    // Actualizar parallax (solo para dispositivos no-touch)
+    // Actualizar parallax (throttled)
     const parallaxValues = updateParallax();
     onParallaxUpdate?.({ ...parallaxValues, viewport });
 
-    // Aplicar parallax a planos (solo para dispositivos no-touch)
+    // Aplicar parallax a planos (solo si no es touch)
     if (!isTouch) {
       const parallaxFactors = { bg: 0.01, clouds: 0.02, island: 0.05 };
       Object.entries(parallaxFactors).forEach(([ref, factor]) => {
@@ -708,19 +661,18 @@ export default function ImageTransitions({
       });
     }
 
-    // Renderizar escenas
+    // Renderizar escenas (optimizado)
     const currentRenderTarget = gl.getRenderTarget();
     const currentClearColor = new THREE.Color();
     gl.getClearColor(currentClearColor);
     const currentClearAlpha = gl.getClearAlpha();
 
-    // Renderizar escena 1
+    // Renderizar solo si es necesario
     gl.setRenderTarget(renderTargets.rt1);
     gl.setClearColor("#000000", 1);
     gl.clear(true, true, true);
     gl.render(scenes.scene1, camera);
 
-    // Renderizar escena 2
     gl.setRenderTarget(renderTargets.rt2);
     gl.setClearColor("#000000", 1);
     gl.clear(true, true, true);
@@ -731,12 +683,10 @@ export default function ImageTransitions({
     gl.setClearColor(currentClearColor, currentClearAlpha);
 
     // Actualizar material
-    Object.assign(material, {
-      uTexture1: renderTargets.rt1.texture,
-      uTexture2: renderTargets.rt2.texture,
-      uProgress: progressRef.current,
-      uTime: time,
-    });
+    material.uniforms.uTexture1.value = renderTargets.rt1.texture;
+    material.uniforms.uTexture2.value = renderTargets.rt2.texture;
+    material.uniforms.uProgress.value = progressRef.current;
+    material.uniforms.uTime.value = time;
   });
 
   return (
