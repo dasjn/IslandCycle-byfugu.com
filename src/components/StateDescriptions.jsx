@@ -61,7 +61,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
     <AnimatePresence mode="wait">
       {selectedNumber && !isAnimating && (
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6] transition-none will-change-transform gap-16 w-screen h-screen flex items-center justify-center"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6] transition-none will-change-transform w-screen h-screen flex items-center justify-center"
           key={selectedNumber}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -71,7 +71,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
             ease: [0.25, 0.1, 0.25, 1],
           }}
         >
-          <div className="max-w-4xl mx-auto px-8 text-center text-white flex flex-col items-center gap-12">
+          <div className="max-w-screen sm:max-w-4xl mx-auto px-8 text-center text-white flex flex-col items-center gap-16">
             {/* Elementos geométricos decorativos */}
             <div className="flex justify-center">
               <CubesSvg selectedNumber={selectedNumber} />
@@ -80,7 +80,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
             <div>
               {/* Categoría */}
               <motion.div
-                className="text-sm font-thin tracking-wider"
+                className="text-sm md:text-xl font-normal tracking-wider"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -96,8 +96,13 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
               </motion.div>
 
               {/* Título principal */}
-              <motion.h1
-                className="text-5xl md:text-6xl font-bold tracking-wider"
+              <motion.h2
+                className="break-words font-bold"
+                style={{
+                  fontSize: "clamp(2rem, 8vw, 4rem)",
+                  letterSpacing: "clamp(0.3rem, 1.5vw, 1.125rem)",
+                  marginRight: "clamp(-0.3rem, -1.5vw, -1.125rem)",
+                }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
@@ -108,11 +113,11 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
                 }}
               >
                 {STATE_DATA[selectedNumber].title}
-              </motion.h1>
+              </motion.h2>
 
               {/* Subtítulo */}
               <motion.p
-                className="text-md font-extralight"
+                className="text-sm md:text-xl font-normal tracking-wider"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -122,7 +127,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
               </motion.p>
             </div>
 
-            <div className="relative text-left flex flex-col gap-4 p-4">
+            <div className="relative max-w-screen text-left flex flex-col gap-4 p-4">
               {/* Marco decorativo del cuadro de texto */}
               <div className="absolute inset-0 pointer-events-none">
                 {/* Bracket superior izquierdo */}
@@ -191,7 +196,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
 
               {/* Número con marco posicionado relativamente al cuadro de texto */}
               <motion.div
-                className="absolute -top-16 -left-16 z-10"
+                className="absolute -top-10 left-0 lg:-top-16 lg:-left-16 z-10"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
@@ -202,7 +207,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
 
               {/* Descripción corta */}
               <motion.h2
-                className="text-xl md:text-2xl font-normal leading-relaxed"
+                className="text-sm md:text-xl font-bold leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -213,7 +218,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
 
               {/* Descripción larga */}
               <motion.p
-                className="text-base md:text-lg font-light leading-relaxed text-white/90 max-w-3xl mx-auto"
+                className="text-sm md:text-xl font-normal max-w-3xl mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -224,7 +229,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
 
               {/* Deliverables */}
               <motion.div
-                className="flex items-center text-sm font-light text-white/80"
+                className="text-sm md:text-xl font-normal flex items-center"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
@@ -232,7 +237,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
               >
                 <span className="mr-2">→</span>
                 <span>
-                  <strong>Deliverable examples:</strong>{" "}
+                  Deliverable examples:{" "}
                   {STATE_DATA[selectedNumber].deliverables}
                 </span>
               </motion.div>

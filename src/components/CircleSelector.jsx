@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMagneticCursor } from "../hooks/useMagneticCursor";
+import { useDevice } from "../hooks/useDevice";
 
 export default function CircleSelector({
   parallaxValues,
@@ -66,6 +67,17 @@ function MagneticNumber({
   const ref = useRef(null);
   const { setHoveredElement } = useMagneticCursor();
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const { isTouch, isMobile, isTablet, deviceType } = useDevice();
+
+  // Calcular factor de escala basado en el tipo de dispositivo
+  const getScaleFactor = () => {
+    if (isMobile) return 2.2; // Más grande para móviles
+    if (isTablet) return 1.8; // Escala intermedia para tablets
+    if (isTouch) return 1.6; // Escala para otros dispositivos táctiles
+    return 1; // Escala normal para desktop
+  };
+
+  const scaleFactor = getScaleFactor();
 
   const handleMouseMove = (e) => {
     if (ref.current) {
@@ -102,7 +114,7 @@ function MagneticNumber({
       onClick={onClick}
       initial={{ scale: 0, opacity: 0 }}
       animate={{
-        scale: 1,
+        scale: 1 * scaleFactor, // Escala basada en el dispositivo
         opacity: 1,
         x: position.x,
         y: position.y,
@@ -113,7 +125,7 @@ function MagneticNumber({
         x: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
         y: { type: "spring", stiffness: 150, damping: 15, mass: 0.1 },
       }}
-      whileHover={{ scale: 1.1 }}
+      whileHover={{ scale: 1.1 * scaleFactor }}
       whileTap={{ scale: 0.95 }}
       style={{ cursor: "pointer", pointerEvents: "all" }}
     >
@@ -158,6 +170,8 @@ function InteractiveSVG({
   onSectionLeave,
   onNumberClick,
 }) {
+  const { isTouch } = useDevice();
+
   return (
     <div className="absolute inset-0">
       <svg
@@ -285,35 +299,39 @@ function InteractiveSVG({
             </tspan>
           </text>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "cloud" ? 1 : 0,
-              scale: hoveredSection === "cloud" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-5" transform="translate(578.21 90.91)">
-              <tspan x="0" y="0">
-                THE DIGITAL IDENTITY
-              </tspan>
-            </text>
-          </motion.g>
+          {!isTouch && (
+            <>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "cloud" ? 1 : 0,
+                  scale: hoveredSection === "cloud" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-5" transform="translate(578.21 90.91)">
+                  <tspan x="0" y="0">
+                    THE DIGITAL IDENTITY
+                  </tspan>
+                </text>
+              </motion.g>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "cloud" ? 1 : 0,
-              scale: hoveredSection === "cloud" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-3" transform="translate(567.14 151.19)">
-              <tspan x="0" y="0">
-                Online presence: Website + UX
-              </tspan>
-            </text>
-          </motion.g>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "cloud" ? 1 : 0,
+                  scale: hoveredSection === "cloud" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-3" transform="translate(567.14 151.19)">
+                  <tspan x="0" y="0">
+                    Online presence: Website + UX
+                  </tspan>
+                </text>
+              </motion.g>
+            </>
+          )}
         </g>
 
         {/* Rain Section */}
@@ -324,38 +342,42 @@ function InteractiveSVG({
             </tspan>
           </text>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "rain" ? 1 : 0,
-              scale: hoveredSection === "rain" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-5" transform="translate(182.5 380.12)">
-              <tspan x="0" y="0">
-                WHERE DIGITAL &
-              </tspan>
-              <tspan x="5.13" y="11">
-                PHYSICAL MEET
-              </tspan>
-            </text>
-          </motion.g>
+          {!isTouch && (
+            <>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "rain" ? 1 : 0,
+                  scale: hoveredSection === "rain" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-5" transform="translate(182.5 380.12)">
+                  <tspan x="0" y="0">
+                    WHERE DIGITAL &
+                  </tspan>
+                  <tspan x="5.13" y="11">
+                    PHYSICAL MEET
+                  </tspan>
+                </text>
+              </motion.g>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "rain" ? 1 : 0,
-              scale: hoveredSection === "rain" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-3" transform="translate(159.46 447.86)">
-              <tspan x="0" y="0">
-                The cohesion across channels
-              </tspan>
-            </text>
-          </motion.g>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "rain" ? 1 : 0,
+                  scale: hoveredSection === "rain" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-3" transform="translate(159.46 447.86)">
+                  <tspan x="0" y="0">
+                    The cohesion across channels
+                  </tspan>
+                </text>
+              </motion.g>
+            </>
+          )}
         </g>
 
         {/* Evaporation Section */}
@@ -369,35 +391,39 @@ function InteractiveSVG({
             </tspan>
           </text>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "evaporation" ? 1 : 0,
-              scale: hoveredSection === "evaporation" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-5" transform="translate(982.36 387.25)">
-              <tspan x="0" y="0">
-                MOMENTUM & GROWTH
-              </tspan>
-            </text>
-          </motion.g>
+          {!isTouch && (
+            <>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "evaporation" ? 1 : 0,
+                  scale: hoveredSection === "evaporation" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-5" transform="translate(982.36 387.25)">
+                  <tspan x="0" y="0">
+                    MOMENTUM & GROWTH
+                  </tspan>
+                </text>
+              </motion.g>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "evaporation" ? 1 : 0,
-              scale: hoveredSection === "evaporation" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-3" transform="translate(989.73 447.52)">
-              <tspan x="0" y="0">
-                Brand evolution & updates
-              </tspan>
-            </text>
-          </motion.g>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "evaporation" ? 1 : 0,
+                  scale: hoveredSection === "evaporation" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-3" transform="translate(989.73 447.52)">
+                  <tspan x="0" y="0">
+                    Brand evolution & updates
+                  </tspan>
+                </text>
+              </motion.g>
+            </>
+          )}
         </g>
 
         {/* Ground Section */}
@@ -408,35 +434,39 @@ function InteractiveSVG({
             </tspan>
           </text>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "ground" ? 1 : 0,
-              scale: hoveredSection === "ground" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-5" transform="translate(320.88 861.05)">
-              <tspan x="0" y="0">
-                PHYSICAL IDENTITY
-              </tspan>
-            </text>
-          </motion.g>
+          {!isTouch && (
+            <>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "ground" ? 1 : 0,
+                  scale: hoveredSection === "ground" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-5" transform="translate(320.88 861.05)">
+                  <tspan x="0" y="0">
+                    PHYSICAL IDENTITY
+                  </tspan>
+                </text>
+              </motion.g>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "ground" ? 1 : 0,
-              scale: hoveredSection === "ground" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-3" transform="translate(335.14 921.33)">
-              <tspan x="0" y="0">
-                Offline touchpoints
-              </tspan>
-            </text>
-          </motion.g>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "ground" ? 1 : 0,
+                  scale: hoveredSection === "ground" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-3" transform="translate(335.14 921.33)">
+                  <tspan x="0" y="0">
+                    Offline touchpoints
+                  </tspan>
+                </text>
+              </motion.g>
+            </>
+          )}
         </g>
 
         {/* Sea Section */}
@@ -447,38 +477,42 @@ function InteractiveSVG({
             </tspan>
           </text>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "sea" ? 1 : 0,
-              scale: hoveredSection === "sea" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-5" transform="translate(869.43 853.7)">
-              <tspan x="0" y="0">
-                STRUCTURE &
-              </tspan>
-              <tspan x="2.99" y="11">
-                POSITIONING
-              </tspan>
-            </text>
-          </motion.g>
+          {!isTouch && (
+            <>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "sea" ? 1 : 0,
+                  scale: hoveredSection === "sea" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-5" transform="translate(869.43 853.7)">
+                  <tspan x="0" y="0">
+                    STRUCTURE &
+                  </tspan>
+                  <tspan x="2.99" y="11">
+                    POSITIONING
+                  </tspan>
+                </text>
+              </motion.g>
 
-          <motion.g
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: hoveredSection === "sea" ? 1 : 0,
-              scale: hoveredSection === "sea" ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <text className="cls-3" transform="translate(826.68 921.68)">
-              <tspan x="0" y="0">
-                Who you are and where you stand
-              </tspan>
-            </text>
-          </motion.g>
+              <motion.g
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{
+                  opacity: hoveredSection === "sea" ? 1 : 0,
+                  scale: hoveredSection === "sea" ? 1 : 0.8,
+                }}
+                transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <text className="cls-3" transform="translate(826.68 921.68)">
+                  <tspan x="0" y="0">
+                    Who you are and where you stand
+                  </tspan>
+                </text>
+              </motion.g>
+            </>
+          )}
         </g>
 
         {/* Líneas de conexión */}

@@ -270,12 +270,12 @@ export default function ImageTransitions({
   // Texturas del parallax memoizadas (optimizado para evitar recreaciones)
   const parallaxTextures = useMemo(() => {
     if (isTouch) {
-      const staticTexture = loadImageTexture("BG_v02.png", gl);
+      const staticTexture = loadImageTexture("TheIslandCycle_All_v04.png", gl);
       return {
         static: {
           texture: staticTexture,
           width: 2500,
-          height: 2500,
+          height: 1800,
         },
       };
     }

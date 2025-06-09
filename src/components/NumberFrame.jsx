@@ -1,7 +1,7 @@
 // Componente compartido para el marco decorativo con brackets
 export default function NumberFrame({
   children,
-  size = "w-16 h-16", // Más grande para dar espacio al hover
+  size = "w-8 h-8", // Más grande para dar espacio al hover
   strokeWidth = "1",
   className = "",
 }) {
@@ -10,15 +10,15 @@ export default function NumberFrame({
       className={`relative ${size} flex items-center justify-center ${className}`}
     >
       {/* Marco decorativo con brackets - posicionados con margen interno */}
-      <div className="absolute inset-2">
+      <div className="absolute inset-0">
         {" "}
         {/* inset-2 da margen interno de 8px */}
         {/* Bracket superior izquierdo */}
         <svg
           className="absolute top-0 left-0"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
         >
           <polyline
             points="15,1 1,1 1,15"
@@ -30,9 +30,9 @@ export default function NumberFrame({
         {/* Bracket superior derecho */}
         <svg
           className="absolute top-0 right-0"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
           style={{ transform: "rotate(90deg)" }}
         >
           <polyline
@@ -45,9 +45,9 @@ export default function NumberFrame({
         {/* Bracket inferior izquierdo */}
         <svg
           className="absolute bottom-0 left-0"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
           style={{ transform: "rotate(270deg)" }}
         >
           <polyline
@@ -60,9 +60,9 @@ export default function NumberFrame({
         {/* Bracket inferior derecho */}
         <svg
           className="absolute bottom-0 right-0"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
           style={{ transform: "rotate(180deg)" }}
         >
           <polyline

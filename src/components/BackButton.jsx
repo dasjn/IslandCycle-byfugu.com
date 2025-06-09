@@ -31,16 +31,83 @@ export default function BackButton({ isVisible, onBackClick }) {
   };
 
   return (
-    <div className="absolute top-6 left-6 z-[10]">
+    <div className="absolute top-8 left-8 z-[10]">
       <MagneticElement
         onClick={handleBackClick}
-        className="group relative overflow-hidden bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white font-light text-sm tracking-wide transition-all duration-300 hover:bg-white/20 hover:border-white/40 cursor-pointer"
+        className="group relative flex items-center justify-center px-4 py-2 cursor-pointer"
         skipInitialAnimation={false}
       >
-        <div className="flex items-center gap-3">
-          {/* Arrow icon */}
+        {/* Marco decorativo con brackets */}
+        <div className="absolute inset-0">
+          {/* Bracket superior izquierdo */}
           <svg
-            className="w-4 h-4"
+            className="absolute top-0 left-0"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+          >
+            <polyline
+              points="15,1 1,1 1,15"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
+
+          {/* Bracket superior derecho */}
+          <svg
+            className="absolute top-0 right-0"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            style={{ transform: "rotate(90deg)" }}
+          >
+            <polyline
+              points="15,1 1,1 1,15"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
+
+          {/* Bracket inferior izquierdo */}
+          <svg
+            className="absolute bottom-0 left-0"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            style={{ transform: "rotate(270deg)" }}
+          >
+            <polyline
+              points="15,1 1,1 1,15"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
+
+          {/* Bracket inferior derecho */}
+          <svg
+            className="absolute bottom-0 right-0"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            style={{ transform: "rotate(180deg)" }}
+          >
+            <polyline
+              points="15,1 1,1 1,15"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
+        </div>
+
+        {/* Contenido del botón */}
+        <div className="relative z-10 flex items-center gap-4 text-white">
+          {/* Flecha hacia la izquierda */}
+          <svg
+            className="w-6 h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -53,18 +120,10 @@ export default function BackButton({ isVisible, onBackClick }) {
             />
           </svg>
 
-          {/* Text */}
-          <span>Back to Parallax</span>
+          {/* Texto RETURN */}
+          <span className="font-light text-2xl tracking-widest">RETURN</span>
         </div>
-
-        {/* Subtle glow effect on hover */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </MagneticElement>
-
-      {/* Additional context text */}
-      <div className="mt-3 text-white/60 text-xs font-light tracking-wide">
-        Return to explore other elements
-      </div>
     </div>
   );
 }
