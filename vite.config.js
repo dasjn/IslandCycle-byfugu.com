@@ -10,29 +10,18 @@ export default defineConfig({
   // Optimizaciones de build para producción
   build: {
     target: "esnext",
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ["console.log", "console.info"],
-        passes: 2,
-      },
-      mangle: {
-        safari10: true,
-      },
-      format: {
-        safari10: true,
-      },
-    },
+    minify: "esbuild", // Changed from terser to esbuild (faster, no extra dependencies)
     rollupOptions: {
       output: {
         manualChunks: {
           // Separar vendors principales para mejor caching
           vendor: ["react", "react-dom"],
-          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          // Split Three.js into smaller chunks
+          "three-core": ["three"],
+          "three-fiber": ["@react-three/fiber"],
+          "three-utils": ["@react-three/drei"],
           animation: ["framer-motion"],
-          utils: ["lodash", "lottie-react"],
+          utils: ["lottie-react"],
         },
         // Optimizar nombres de chunks
         chunkFileNames: "assets/[name]-[hash].js",
@@ -40,7 +29,7 @@ export default defineConfig({
         assetFileNames: "assets/[name]-[hash].[ext]",
       },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1200, // Increase limit to reduce warnings for Three.js
     // Optimizar assets
     assetsInlineLimit: 4096, // Inline assets pequeños
     reportCompressedSize: false, // Acelerar build
@@ -116,6 +105,8 @@ export default defineConfig({
     minifyIdentifiers: true,
     minifySyntax: true,
     minifyWhitespace: true,
+    // Remove console statements in production
+    drop: ["console", "debugger"],
   },
 
   // Configuraciones de resolución optimizadas
