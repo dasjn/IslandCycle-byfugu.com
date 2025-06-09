@@ -741,14 +741,24 @@ export default function ImageTransitions({
       }
     }
 
-    // Animar progreso (optimizado)
-    const targetProgress = isToggled ? 1 : 0;
-    const progressDiff = targetProgress - progressRef.current;
-    const transitionSpeed = isTouch ? 0.015 : 0.005; // 3x más rápido en touch
-    progressRef.current += progressDiff * transitionSpeed;
+    // *** CAMBIO PRINCIPAL: Solo animar si el contenido está listo ***
+    const shouldAnimate =
+      // Si vamos hacia parallax (isToggled = false), siempre permitir
+      !isToggled ||
+      // Si vamos hacia video (isToggled = true), solo si el video está listo
+      (isToggled && isVideoReady);
+
+    if (shouldAnimate) {
+      // Animar progreso (optimizado)
+      const targetProgress = isToggled ? 1 : 0;
+      const progressDiff = targetProgress - progressRef.current;
+      const transitionSpeed = isTouch ? 0.015 : 0.005;
+      progressRef.current += progressDiff * transitionSpeed;
+    }
 
     // Gestionar animación
     const threshold = selectedNumber === null ? 0.3 : 0.3;
+    const progressDiff = (isToggled ? 1 : 0) - progressRef.current;
     const isCurrentlyAnimating = Math.abs(progressDiff) > threshold;
 
     if (wasAnimatingRef.current !== isCurrentlyAnimating) {
@@ -793,8 +803,8 @@ export default function ImageTransitions({
     gl.getClearColor(currentClearColor);
     const currentClearAlpha = gl.getClearAlpha();
 
-    // Renderizar solo si es necesario y las texturas están listas
-    if (isVideoReady) {
+    // *** CAMBIO: Renderizar rt1 solo si el video está listo O si estamos en parallax ***
+    if (isVideoReady || !isToggled) {
       gl.setRenderTarget(renderTargets.rt1);
       gl.setClearColor("#000000", 1);
       gl.clear(true, true, true);
@@ -810,8 +820,8 @@ export default function ImageTransitions({
     gl.setRenderTarget(currentRenderTarget);
     gl.setClearColor(currentClearColor, currentClearAlpha);
 
-    // Actualizar material - SOLO SI ESTÁ LISTO
-    if (isVideoReady) {
+    // *** CAMBIO: Actualizar material solo cuando corresponde ***
+    if (isVideoReady || !isToggled) {
       material.uniforms.uTexture1.value = renderTargets.rt1.texture;
     }
     material.uniforms.uTexture2.value = renderTargets.rt2.texture;

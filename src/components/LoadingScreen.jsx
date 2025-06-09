@@ -36,8 +36,9 @@ export default function LoadingScreen({
               <h1 className="text-2xl md:text-3xl font-light tracking-wider mb-2">
                 THE ISLAND CYCLE
               </h1>
+              <p className="text-xs md:text-sm text-white/70 font-light">or</p>
               <p className="text-sm md:text-base text-white/70 font-light">
-                Loading Brand Framework
+                How We Build Coherent Brands
               </p>
             </motion.div>
 
@@ -137,40 +138,16 @@ export default function LoadingScreen({
                   />
                 </motion.div>
               </div>
-
-              {/* Porcentaje de progreso */}
-              <motion.div
-                className="mt-4 text-sm font-light text-white/60"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                {loadingProgress}%
-              </motion.div>
             </motion.div>
 
-            {/* Elementos decorativos adicionales */}
+            {/* Porcentaje de progreso centrado */}
             <motion.div
-              className="flex justify-center space-x-1"
+              className="mb-4 text-sm font-light text-white/60 text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
+              transition={{ delay: 0.7 }}
             >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-1 h-1 bg-white rounded-full"
-                  animate={{
-                    opacity: [0.3, 1, 0.3],
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
+              {loadingProgress}%
             </motion.div>
           </div>
         </motion.div>

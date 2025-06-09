@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMagneticCursor } from "../hooks/useMagneticCursor";
 import { useDevice } from "../hooks/useDevice";
+import CircleSvg from "../assets/CircleSvg";
 
 export default function CircleSelector({
   parallaxValues,
@@ -174,6 +175,7 @@ function InteractiveSVG({
 
   return (
     <div className="absolute inset-0">
+      <CircleSvg />
       <svg
         id="interactive-cycle"
         xmlns="http://www.w3.org/2000/svg"
@@ -513,58 +515,6 @@ function InteractiveSVG({
               </motion.g>
             </>
           )}
-        </g>
-
-        {/* Líneas de conexión */}
-        <g>
-          <path
-            className="cls-6"
-            d="M332.58,823.47c-66.99-75.21-107.69-174.33-107.69-282.97,0-22.11,1.69-43.83,4.94-65.04"
-          />
-          <polygon
-            className="cls-2"
-            points="333.55 818.28 332.55 818.23 332.35 823.16 327.45 822.6 327.33 823.6 333.3 824.28 333.55 818.28"
-          />
-        </g>
-        <g>
-          <path
-            className="cls-6"
-            d="M820.46,930.82c-52.06,22.7-109.54,35.29-169.96,35.29s-118.63-12.75-170.95-35.73"
-          />
-          <polygon
-            className="cls-2"
-            points="815.83 928.26 815.48 929.2 820.09 930.94 818.02 935.41 818.93 935.83 821.45 930.38 815.83 928.26"
-          />
-        </g>
-        <g>
-          <path
-            className="cls-6"
-            d="M1071.46,477.37c3.06,20.6,4.65,41.68,4.65,63.13,0,107.84-40.11,206.31-106.22,281.32"
-          />
-          <polygon
-            className="cls-2"
-            points="1067.82 481.19 1068.63 481.78 1071.49 477.75 1075.29 480.9 1075.93 480.12 1071.3 476.3 1067.82 481.19"
-          />
-        </g>
-        <g>
-          <path
-            className="cls-6"
-            d="M767.15,131.08c115.84,32.94,211.55,113.72,264.4,219.63"
-          />
-          <polygon
-            className="cls-2"
-            points="769.16 135.95 770.03 135.44 767.51 131.2 771.93 129.01 771.49 128.11 766.11 130.78 769.16 135.95"
-          />
-        </g>
-        <g>
-          <path
-            className="cls-6"
-            d="M273.42,342.96c53.7-102.29,147.79-180.04,261.08-212.06"
-          />
-          <polygon
-            className="cls-2"
-            points="278.62 342.06 278.31 341.11 273.63 342.64 272.44 337.85 271.47 338.09 272.91 343.92 278.62 342.06"
-          />
         </g>
 
         {/* Números Magnéticos */}

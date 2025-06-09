@@ -19,6 +19,9 @@ const ASSETS_TO_PRELOAD = {
   ],
 };
 
+// CONFIGURACIÓN: Tiempo mínimo que se mostrará la pantalla de carga (en milisegundos)
+const MINIMUM_LOADING_TIME = 2000; // 2 segundos
+
 export const useAssetLoader = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +72,9 @@ export const useAssetLoader = () => {
 
   // Función principal de precarga
   const preloadAssets = useCallback(async () => {
+    // MARCAR EL TIEMPO DE INICIO
+    const startTime = Date.now();
+
     try {
       const totalAssets =
         ASSETS_TO_PRELOAD.videos.length + ASSETS_TO_PRELOAD.images.length;
@@ -116,12 +122,30 @@ export const useAssetLoader = () => {
       // Esperar a que todos los assets se carguen (o fallen)
       await Promise.allSettled([...videoPromises, ...imagePromises]);
 
-      // Pequeña pausa para que el usuario vea el 100%
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // CALCULAR TIEMPO TRANSCURRIDO Y ESPERAR SI ES NECESARIO
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+      if (remainingTime > 0) {
+        // Si no ha pasado el tiempo mínimo, esperar el tiempo restante
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      } else {
+        // Si ya pasó el tiempo mínimo, pequeña pausa para que se vea el 100%
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
 
       setIsLoading(false);
     } catch (error) {
       console.error("Error during asset preloading:", error);
+
+      // Incluso si hay error, respetar el tiempo mínimo
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, MINIMUM_LOADING_TIME - elapsedTime);
+
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
       setIsLoading(false);
     }
   }, [loadImage, loadVideo]);
