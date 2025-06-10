@@ -42,8 +42,8 @@ export default function BackButton({ isVisible, onBackClick }) {
           {/* Bracket superior izquierdo */}
           <svg
             className="absolute top-0 left-0"
-            width="16"
-            height="16"
+            width="12"
+            height="12"
             viewBox="0 0 16 16"
           >
             <polyline
@@ -57,8 +57,8 @@ export default function BackButton({ isVisible, onBackClick }) {
           {/* Bracket superior derecho */}
           <svg
             className="absolute top-0 right-0"
-            width="16"
-            height="16"
+            width="12"
+            height="12"
             viewBox="0 0 16 16"
             style={{ transform: "rotate(90deg)" }}
           >
@@ -73,8 +73,8 @@ export default function BackButton({ isVisible, onBackClick }) {
           {/* Bracket inferior izquierdo */}
           <svg
             className="absolute bottom-0 left-0"
-            width="16"
-            height="16"
+            width="12"
+            height="12"
             viewBox="0 0 16 16"
             style={{ transform: "rotate(270deg)" }}
           >
@@ -89,8 +89,8 @@ export default function BackButton({ isVisible, onBackClick }) {
           {/* Bracket inferior derecho */}
           <svg
             className="absolute bottom-0 right-0"
-            width="16"
-            height="16"
+            width="12"
+            height="12"
             viewBox="0 0 16 16"
             style={{ transform: "rotate(180deg)" }}
           >

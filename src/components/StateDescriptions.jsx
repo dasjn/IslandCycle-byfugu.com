@@ -73,7 +73,7 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
         >
           <div className="max-w-screen sm:max-w-4xl mx-auto px-8 text-center text-white flex flex-col items-center gap-12 sm:gap-16">
             {/* Elementos geométricos decorativos */}
-            <div className="flex justify-center scale-75 -mb-8 sm:mb-0 sm:scale-100">
+            <div className="flex justify-center scale-75 -mb-10 sm:mb-0 sm:scale-100">
               <CubesSvg selectedNumber={selectedNumber} />
             </div>
 
