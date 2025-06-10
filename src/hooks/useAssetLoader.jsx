@@ -15,7 +15,6 @@ const ASSETS_TO_PRELOAD = {
     "BG_v03.png",
     "Clouds_v01.webp",
     "Island_v03.webp",
-    "cloud.jpg",
   ],
 };
 

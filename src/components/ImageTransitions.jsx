@@ -15,7 +15,7 @@ const MEDIA_MAP = {
   5: { type: "video", src: "Evaporation_v01.mp4" },
 };
 
-const DEFAULT_IMAGE = "cloud.jpg";
+const DEFAULT_IMAGE = "BG_v03.png";
 
 // Cache global para texturas optimizado
 const textureCache = new Map();

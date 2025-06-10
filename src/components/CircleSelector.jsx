@@ -295,7 +295,12 @@ function InteractiveSVG({
 
         {/* Cloud Section */}
         <g className="cycle-section section-cloud" data-section="cloud">
-          <text className="cls-4" transform="translate(555.24 133.76)">
+          <text
+            className="cls-4"
+            transform="translate(555.24 133.76)"
+            style={isTouch ? { cursor: "pointer", pointerEvents: "all" } : {}}
+            onClick={isTouch ? () => onNumberClick(1) : undefined}
+          >
             <tspan x="0" y="0">
               CLOUD
             </tspan>
@@ -338,7 +343,12 @@ function InteractiveSVG({
 
         {/* Rain Section */}
         <g className="cycle-section section-rain" data-section="rain">
-          <text className="cls-4" transform="translate(173.34 430.43)">
+          <text
+            className="cls-4"
+            transform="translate(173.34 430.43)"
+            style={isTouch ? { cursor: "pointer", pointerEvents: "all" } : {}}
+            onClick={isTouch ? () => onNumberClick(2) : undefined}
+          >
             <tspan x="0" y="0">
               RAIN
             </tspan>
@@ -387,7 +397,12 @@ function InteractiveSVG({
           className="cycle-section section-evaporation"
           data-section="evaporation"
         >
-          <text className="cls-4" transform="translate(859.06 430.1)">
+          <text
+            className="cls-4"
+            transform="translate(859.06 430.1)"
+            style={isTouch ? { cursor: "pointer", pointerEvents: "all" } : {}}
+            onClick={isTouch ? () => onNumberClick(5) : undefined}
+          >
             <tspan x="0" y="0">
               EVAPORATION
             </tspan>
@@ -430,7 +445,12 @@ function InteractiveSVG({
 
         {/* Ground Section */}
         <g className="cycle-section section-ground" data-section="ground">
-          <text className="cls-4" transform="translate(264.25 903.9)">
+          <text
+            className="cls-4"
+            transform="translate(264.25 903.9)"
+            style={isTouch ? { cursor: "pointer", pointerEvents: "all" } : {}}
+            onClick={isTouch ? () => onNumberClick(3) : undefined}
+          >
             <tspan x="0" y="0">
               GROUND
             </tspan>
@@ -473,7 +493,12 @@ function InteractiveSVG({
 
         {/* Sea Section */}
         <g className="cycle-section section-sea" data-section="sea">
-          <text className="cls-4" transform="translate(861.72 904.25)">
+          <text
+            className="cls-4"
+            transform="translate(861.72 904.25)"
+            style={isTouch ? { cursor: "pointer", pointerEvents: "all" } : {}}
+            onClick={isTouch ? () => onNumberClick(4) : undefined}
+          >
             <tspan x="0" y="0">
               SEA
             </tspan>
