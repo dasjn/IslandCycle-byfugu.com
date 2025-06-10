@@ -13,14 +13,14 @@ const ASSETS_TO_PRELOAD = {
   images: [
     "TheIslandCycle_All_v04.png",
     "BG_v03.png",
-    "Clouds_v01.png",
-    "Island_v03.png",
+    "Clouds_v01.webp",
+    "Island_v03.webp",
     "cloud.jpg",
   ],
 };
 
 // CONFIGURACIÓN: Tiempo mínimo que se mostrará la pantalla de carga (en milisegundos)
-const MINIMUM_LOADING_TIME = 3000; // 2 segundos
+const MINIMUM_LOADING_TIME = 3000;
 
 export const useAssetLoader = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);

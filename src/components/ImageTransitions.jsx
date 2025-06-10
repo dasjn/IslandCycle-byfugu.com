@@ -375,12 +375,12 @@ export default function ImageTransitions({
         height: 1080,
       },
       clouds: {
-        texture: loadImageTexture("Clouds_v01.png", gl, getPreloadedAsset),
+        texture: loadImageTexture("Clouds_v01.webp", gl, getPreloadedAsset),
         width: 1920,
         height: 1080,
       },
       island: {
-        texture: loadImageTexture("Island_v03.png", gl, getPreloadedAsset),
+        texture: loadImageTexture("Island_v03.webp", gl, getPreloadedAsset),
         width: 2500,
         height: 1080,
       },
