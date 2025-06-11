@@ -107,7 +107,7 @@ export default function BackButton({ isVisible, onBackClick }) {
         <div className="relative z-10 flex items-center gap-4 text-white">
           {/* Flecha hacia la izquierda */}
           <svg
-            className="w-6 h-6"
+            className="w-4 h-4 sm:w-6 sm:h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -121,7 +121,9 @@ export default function BackButton({ isVisible, onBackClick }) {
           </svg>
 
           {/* Texto RETURN */}
-          <span className="font-light text-2xl tracking-widest">RETURN</span>
+          <span className="font-light text-sm sm:text-2xl tracking-widest">
+            RETURN
+          </span>
         </div>
       </MagneticElement>
     </div>
