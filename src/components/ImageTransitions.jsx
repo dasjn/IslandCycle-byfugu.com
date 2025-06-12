@@ -379,6 +379,11 @@ export default function ImageTransitions({
         width: 1920,
         height: 1080,
       },
+      rain: {
+        texture: loadImageTexture("Rain_v01.webp", gl, getPreloadedAsset),
+        width: 1920,
+        height: 1080,
+      },
       island: {
         texture: loadImageTexture("Island_v03.webp", gl, getPreloadedAsset),
         width: 2500,
@@ -663,6 +668,12 @@ export default function ImageTransitions({
           parallaxFactor: 0.02,
         },
         {
+          textureData: parallaxTextures.rain,
+          z: -0.05,
+          ref: "rain",
+          parallaxFactor: 0.02,
+        },
+        {
           textureData: parallaxTextures.island,
           z: 0.1,
           ref: "island",
@@ -787,7 +798,12 @@ export default function ImageTransitions({
 
     // Aplicar parallax a planos (solo si no es touch)
     if (!isTouch) {
-      const parallaxFactors = { bg: 0.01, clouds: 0.02, island: 0.05 };
+      const parallaxFactors = {
+        bg: 0.01,
+        clouds: 0.02,
+        rain: 0.02,
+        island: 0.05,
+      };
       Object.entries(parallaxFactors).forEach(([ref, factor]) => {
         const plane = parallaxPlanesRef.current[ref];
         if (plane) {
