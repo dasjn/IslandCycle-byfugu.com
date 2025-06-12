@@ -11,6 +11,7 @@ import MagneticCursor from "./components/MagneticCursor";
 import { DeviceProvider } from "./providers/DeviceProvider";
 import { useDevice } from "./hooks/useDevice";
 import { useAssetLoader } from "./hooks/useAssetLoader";
+import PerformanceOverlay from "./components/PerformanceOverlay";
 
 // Componente interno que usa el hook useDevice
 function AppContent() {
@@ -70,6 +71,7 @@ function AppContent() {
             overflow: "hidden",
           }}
         >
+          <PerformanceOverlay enabled={import.meta.env.DEV} />
           {/* Solo renderizar MagneticCursor en dispositivos NO táctiles */}
           {!isTouch && <MagneticCursor />}
 
