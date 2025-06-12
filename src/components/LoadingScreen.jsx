@@ -33,12 +33,12 @@ export default function LoadingScreen({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <h1 className="text-2xl md:text-3xl font-light tracking-wider mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-wider mb-2">
                 THE ISLAND CYCLE
               </h1>
-              <p className="text-xs md:text-sm text-white/70 font-light">or</p>
               <p className="text-sm md:text-base text-white/70 font-light">
-                How We Build Coherent Brands
+                Our 5-step framework to make your brand make sense: online,
+                offline, and in-between
               </p>
             </motion.div>
 
