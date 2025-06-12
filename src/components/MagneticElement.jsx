@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useMagneticCursor } from "../hooks/useMagneticCursor";
+import { useGlobalMouse } from "../hooks/useGlobalMouse";
 
 export default function MagneticElement({
   children,
@@ -16,29 +17,48 @@ export default function MagneticElement({
   const ref = useRef(null);
   const { setHoveredElement } = useMagneticCursor();
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
-  const handleMouseMove = (e) => {
-    if (ref.current) {
-      const { clientX, clientY } = e;
-      const { width, height, left, top } = ref.current.getBoundingClientRect();
-      const x = clientX - (left + width / 2);
-      const y = clientY - (top + height / 2);
-      setPosition({ x: x * 0.1, y: y * 0.1 });
-    }
-  };
+  const mouseState = useGlobalMouse({
+    enabled: isHovered, // Solo activo cuando está hovered
+    throttle: 8, // Throttling moderado
+    raw: true,
+    normalized: false,
+  });
 
-  const handleMouseEnter = () => {
+  useEffect(() => {
+    if (!isHovered || !ref.current || !mouseState.isMoving) return;
+
+    const { x: mouseX, y: mouseY } = mouseState;
+    const rect = ref.current.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const deltaX = mouseX - centerX;
+    const deltaY = mouseY - centerY;
+
+    // Aplicar factor magnético
+    setPosition({
+      x: deltaX * 0.1,
+      y: deltaY * 0.1,
+    });
+  }, [isHovered, mouseState.x, mouseState.y, mouseState.isMoving, mouseState]);
+
+  const handleMouseEnter = useCallback(() => {
     if (ref.current) {
+      setIsHovered(true);
       setHoveredElement(ref.current.getBoundingClientRect());
       if (onHover) onHover();
     }
-  };
+  }, [setHoveredElement, onHover]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
     setPosition({ x: 0, y: 0 });
     setHoveredElement(null);
     if (onLeave) onLeave();
-  };
+  }, [setHoveredElement, onLeave]);
 
   return (
     <motion.div
@@ -48,7 +68,6 @@ export default function MagneticElement({
       className={className}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
       initial={
         skipInitialAnimation
           ? { scale: 1, opacity: 1 }

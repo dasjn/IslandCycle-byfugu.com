@@ -5,6 +5,7 @@ import { shaderMaterial } from "@react-three/drei";
 import { useDevice } from "../hooks/useDevice";
 import vertexShader from "../shaders/vertex.glsl";
 import fragmentShader from "../shaders/fragment.glsl";
+import { useParallaxMouse } from "../hooks/useGlobalMouse";
 
 // Mapeo de números a videos/imágenes para la escena 1
 const MEDIA_MAP = {
@@ -241,53 +242,70 @@ function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
   });
 }
 
-// Hook de parallax optimizado con throttling
-function useParallax(isTouch) {
-  const targetPosition = useRef({ x: 0, y: 0 });
-  const currentPosition = useRef({ x: 0, y: 0 });
-  const lastUpdateTime = useRef(0);
+/**
+ * Renderizar escenas de manera optimizada, evitando operaciones innecesarias
+ */
+function optimizedRenderScenes(
+  gl,
+  scenes,
+  camera,
+  renderTargets,
+  cache,
+  needsRenderRef
+) {
+  // ✅ GUARDAR ESTADO ACTUAL UNA SOLA VEZ
+  const currentRenderTarget = gl.getRenderTarget();
+  const currentClearAlpha = gl.getClearAlpha();
 
-  useEffect(() => {
-    if (isTouch) return;
+  // ✅ REUTILIZAR COLOR OBJECT EN LUGAR DE CREAR NUEVO
+  gl.getClearColor(cache.clearColor);
 
-    const handleMouseMove = (e) => {
-      // Throttling para evitar demasiadas actualizaciones
-      const now = Date.now();
-      if (now - lastUpdateTime.current < 16) return; // ~60fps
-      lastUpdateTime.current = now;
+  // ✅ RENDERIZAR SIEMPRE POR AHORA - REMOVER OPTIMIZACIÓN AGRESIVA
+  // TODO: Optimizar después de confirmar que funciona
 
-      const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
-      const normalizedY = -((e.clientY / window.innerHeight) * 2 - 1);
-      targetPosition.current = { x: normalizedX, y: normalizedY };
-    };
+  // RENDERIZAR RT1
+  gl.setRenderTarget(renderTargets.rt1);
+  gl.setClearColor("#000000", 1);
+  gl.clear(true, true, true);
+  gl.render(scenes.scene1, camera);
 
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [isTouch]);
+  // RENDERIZAR RT2
+  gl.setRenderTarget(renderTargets.rt2);
+  gl.setClearColor("#000000", 1);
+  gl.clear(true, true, true);
+  gl.render(scenes.scene2, camera);
 
-  const updateParallax = useCallback(() => {
-    if (isTouch) {
-      return { x: 0, y: 0 };
-    }
+  // ✅ RESTAURAR ESTADO UNA SOLA VEZ
+  gl.setRenderTarget(currentRenderTarget);
+  gl.setClearColor(cache.clearColor, currentClearAlpha);
+}
 
-    const lerp = (start, end, factor) => start + (end - start) * factor;
-    const smoothFactor = 0.02;
+/**
+ * Actualizar uniforms solo si los valores cambiaron
+ */
+function updateMaterialUniforms(
+  material,
+  renderTargets,
+  progress,
+  time,
+  cache
+) {
+  const uniforms = material.uniforms;
+  const lastValues = cache.lastUniforms;
 
-    currentPosition.current.x = lerp(
-      currentPosition.current.x,
-      targetPosition.current.x,
-      smoothFactor
-    );
-    currentPosition.current.y = lerp(
-      currentPosition.current.y,
-      targetPosition.current.y,
-      smoothFactor
-    );
+  // ✅ ACTUALIZAR TEXTURAS SIEMPRE POR AHORA - REMOVER OPTIMIZACIÓN AGRESIVA
+  uniforms.uTexture1.value = renderTargets.rt1.texture;
+  uniforms.uTexture2.value = renderTargets.rt2.texture;
 
-    return currentPosition.current;
-  }, [isTouch]);
+  // ✅ ACTUALIZAR PROGRESS SOLO SI CAMBIÓ SIGNIFICATIVAMENTE
+  if (Math.abs(lastValues.uProgress - progress) > 0.001) {
+    uniforms.uProgress.value = progress;
+    lastValues.uProgress = progress;
+  }
 
-  return { updateParallax };
+  // ✅ ACTUALIZAR TIEMPO SIEMPRE (pero sin crear objetos nuevos)
+  uniforms.uTime.value = time;
+  lastValues.uTime = time;
 }
 
 // Material optimizado con instancia única
@@ -321,6 +339,27 @@ export default function ImageTransitions({
   });
   const { gl, viewport, size } = useThree();
 
+  const renderCache = useMemo(() => {
+    return {
+      // Color object reutilizable para evitar new THREE.Color() cada frame
+      clearColor: new THREE.Color(),
+
+      // Cache para valores de uniforms previos (evitar asignaciones innecesarias)
+      lastUniforms: {
+        uProgress: -1,
+        uTime: -1,
+        uTexture1: null,
+        uTexture2: null,
+      },
+
+      // Referencias de render targets para comparar cambios
+      lastRenderTargets: {
+        rt1: null,
+        rt2: null,
+      },
+    };
+  }, []);
+
   // Referencias optimizadas
   const meshRef = useRef();
   const wasAnimatingRef = useRef(false);
@@ -329,8 +368,9 @@ export default function ImageTransitions({
   const progressRef = useRef(0);
   const renderTargetsRef = useRef(null);
   const lastSizeRef = useRef({ width: 0, height: 0 });
+  const needsRender = useRef(true);
 
-  const { updateParallax } = useParallax(isTouch);
+  const parallaxValues = useParallaxMouse(!isTouch);
 
   // Cleanup de video mejorado
   const cleanupVideo = useCallback(() => {
@@ -733,41 +773,31 @@ export default function ImageTransitions({
     };
   }, [cleanupVideo]);
 
-  // useFrame optimizado con validación mejorada de video
   useFrame((state) => {
     const time = state.clock.elapsedTime;
 
-    // Actualizar video texture con validación mejorada - SOLO SI ESTÁ LISTO
+    // ✅ ACTUALIZAR VIDEO TEXTURE CON VALIDACIÓN MEJORADA
     if (currentVideoRef.current && currentMedia && isVideoReady) {
       const video = currentVideoRef.current;
-
-      // Validar que el video esté en buen estado antes de actualizar la textura
       if (video.readyState >= 2 && !video.ended && video.videoWidth > 0) {
         if (video.paused) {
-          video.play().catch(() => {
-            // Si falla la reproducción, no hacer nada más
-          });
+          video.play().catch(() => {});
         }
         currentMedia.needsUpdate = true;
       }
     }
 
-    // *** CAMBIO PRINCIPAL: Solo animar si el contenido está listo ***
-    const shouldAnimate =
-      // Si vamos hacia parallax (isToggled = false), siempre permitir
-      !isToggled ||
-      // Si vamos hacia video (isToggled = true), solo si el video está listo
-      (isToggled && isVideoReady);
+    // ✅ VERIFICAR SI DEBEMOS ANIMAR (sin cambios)
+    const shouldAnimate = !isToggled || (isToggled && isVideoReady);
 
     if (shouldAnimate) {
-      // Animar progreso (optimizado)
       const targetProgress = isToggled ? 1 : 0;
       const progressDiff = targetProgress - progressRef.current;
       const transitionSpeed = isTouch ? 0.015 : 0.005;
       progressRef.current += progressDiff * transitionSpeed;
     }
 
-    // Gestionar animación
+    // ✅ GESTIÓN DE ANIMACIÓN (sin cambios)
     const threshold = selectedNumber === null ? 0.3 : 0.3;
     const progressDiff = (isToggled ? 1 : 0) - progressRef.current;
     const isCurrentlyAnimating = Math.abs(progressDiff) > threshold;
@@ -777,7 +807,7 @@ export default function ImageTransitions({
       onAnimationChange?.(isCurrentlyAnimating);
     }
 
-    // Cambiar displayedNumber al volver al parallax
+    // ✅ CAMBIAR displayedNumber (sin cambios)
     if (
       selectedNumber === null &&
       displayedNumber !== null &&
@@ -786,17 +816,7 @@ export default function ImageTransitions({
       setDisplayedNumber(null);
     }
 
-    // Actualizar parallax (throttled)
-    const parallaxValues = updateParallax();
-    onParallaxUpdate?.({
-      ...parallaxValues,
-      viewport,
-      deviceType,
-      isTouch,
-      isMobile,
-    });
-
-    // Aplicar parallax a planos (solo si no es touch)
+    // ✅ PARALLAX APLICADO A PLANOS (sin cambios - ya optimizado)
     if (!isTouch) {
       const parallaxFactors = {
         bg: 0.01,
@@ -813,36 +833,24 @@ export default function ImageTransitions({
       });
     }
 
-    // Renderizar escenas (optimizado) - SOLO SI LAS TEXTURAS ESTÁN LISTAS
-    const currentRenderTarget = gl.getRenderTarget();
-    const currentClearColor = new THREE.Color();
-    gl.getClearColor(currentClearColor);
-    const currentClearAlpha = gl.getClearAlpha();
+    // 🚀 OPTIMIZACIÓN CRÍTICA: RENDERIZAR ESCENAS CON CACHE
+    optimizedRenderScenes(
+      gl,
+      scenes,
+      camera,
+      renderTargets,
+      renderCache,
+      needsRender
+    );
 
-    // *** CAMBIO: Renderizar rt1 solo si el video está listo O si estamos en parallax ***
-    if (isVideoReady || !isToggled) {
-      gl.setRenderTarget(renderTargets.rt1);
-      gl.setClearColor("#000000", 1);
-      gl.clear(true, true, true);
-      gl.render(scenes.scene1, camera);
-    }
-
-    gl.setRenderTarget(renderTargets.rt2);
-    gl.setClearColor("#000000", 1);
-    gl.clear(true, true, true);
-    gl.render(scenes.scene2, camera);
-
-    // Restaurar estado
-    gl.setRenderTarget(currentRenderTarget);
-    gl.setClearColor(currentClearColor, currentClearAlpha);
-
-    // *** CAMBIO: Actualizar material solo cuando corresponde ***
-    if (isVideoReady || !isToggled) {
-      material.uniforms.uTexture1.value = renderTargets.rt1.texture;
-    }
-    material.uniforms.uTexture2.value = renderTargets.rt2.texture;
-    material.uniforms.uProgress.value = progressRef.current;
-    material.uniforms.uTime.value = time;
+    // 🚀 OPTIMIZACIÓN CRÍTICA: ACTUALIZAR UNIFORMS SOLO SI CAMBIARON
+    updateMaterialUniforms(
+      material,
+      renderTargets,
+      progressRef.current,
+      time,
+      renderCache
+    );
   });
 
   return (

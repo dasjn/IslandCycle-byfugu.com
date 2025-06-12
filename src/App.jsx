@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx - INTEGRACIÓN COMPLETA
 import React, { useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import CircleSelector from "./components/CircleSelector";
@@ -7,11 +7,13 @@ import BackButton from "./components/BackButton";
 import StateDescriptions from "./components/StateDescriptions";
 import LoadingScreen from "./components/LoadingScreen";
 import { MagneticCursorProvider } from "./providers/MagneticCursorProvider";
+import { GlobalMouseProvider } from "./providers/GlobalMouseProvider";
 import MagneticCursor from "./components/MagneticCursor";
 import { DeviceProvider } from "./providers/DeviceProvider";
 import { useDevice } from "./hooks/useDevice";
 import { useAssetLoader } from "./hooks/useAssetLoader";
 import PerformanceOverlay from "./components/PerformanceOverlay";
+import EnhancedPerformanceOverlay from "./components/EnhancedPerformanceOverlay";
 
 // Componente interno que usa el hook useDevice
 function AppContent() {
@@ -47,8 +49,6 @@ function AppContent() {
     setShowApp(true);
   }, []);
 
-  // isToggled = true cuando hay un número seleccionado (muestra imagen específica)
-  // isToggled = false cuando selectedNumber es null (muestra parallax + CircleSelector)
   const isToggled = selectedNumber !== null;
 
   return (
@@ -71,7 +71,9 @@ function AppContent() {
             overflow: "hidden",
           }}
         >
-          <PerformanceOverlay enabled={import.meta.env.DEV} />
+          {/* <PerformanceOverlay enabled={import.meta.env.DEV} /> */}
+          <EnhancedPerformanceOverlay enabled={import.meta.env.DEV} />
+
           {/* Solo renderizar MagneticCursor en dispositivos NO táctiles */}
           {!isTouch && <MagneticCursor />}
 
@@ -123,9 +125,11 @@ function AppContent() {
 export default function App() {
   return (
     <DeviceProvider>
-      <MagneticCursorProvider>
-        <AppContent />
-      </MagneticCursorProvider>
+      <GlobalMouseProvider>
+        <MagneticCursorProvider>
+          <AppContent />
+        </MagneticCursorProvider>
+      </GlobalMouseProvider>
     </DeviceProvider>
   );
 }
