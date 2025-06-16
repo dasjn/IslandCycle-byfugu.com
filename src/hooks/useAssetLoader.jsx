@@ -9,6 +9,7 @@ const ASSETS_TO_PRELOAD = {
     "Ground_v01.mp4",
     "Sea_v01.mp4",
     "Evaporation_v01.mp4",
+    "Smoke_v02.mp4",
   ],
   images: [
     "TheIslandCycle_All_v04.png",

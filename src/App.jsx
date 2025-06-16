@@ -102,11 +102,13 @@ function AppContent() {
           </Canvas>
 
           {/* CircleSelector visible en la vista parallax */}
-          <CircleSelector
-            parallaxValues={parallaxValues}
-            isVisible={!isToggled && !isAnimating}
-            onNumberClick={handleNumberClick}
-          />
+          {!isLoading && (
+            <CircleSelector
+              parallaxValues={parallaxValues}
+              isVisible={!isToggled && !isAnimating}
+              onNumberClick={handleNumberClick}
+            />
+          )}
 
           {/* StateDescriptions visible en la vista de imagen específica */}
           <StateDescriptions

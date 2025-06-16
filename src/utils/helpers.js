@@ -25,9 +25,8 @@ export const geometryPool = new Map();
 
 // Configuración común de texturas optimizada
 export const configureTexture = (texture, gl) => {
-  // Fix for Three.js r152+: Use colorSpace instead of encoding
   texture.colorSpace = THREE.NoColorSpace;
-  texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy()); // Reducido de 16 a 4
+  texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy());
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
   texture.minFilter = THREE.LinearFilter;
@@ -44,7 +43,7 @@ export const getGeometry = (width, height) => {
   return geometryPool.get(key);
 };
 
-// Función para calcular dimensiones tipo "cover" (sin cambios, ya es eficiente)
+// Función para calcular dimensiones tipo "cover"
 export const calculateCoverDimensions = (
   contentWidth,
   contentHeight,
@@ -67,7 +66,7 @@ export const calculateCoverDimensions = (
   return { width, height };
 };
 
-// Función para calcular dimensiones cover con margen para parallax (sin cambios)
+// Función para calcular dimensiones cover con margen para parallax
 export const calculateCoverDimensionsWithParallaxMargin = (
   contentWidth,
   contentHeight,
@@ -93,12 +92,10 @@ export const calculateCoverDimensionsWithParallaxMargin = (
 
 // Función optimizada para cargar texturas con cache mejorado y assets precargados
 export function loadImageTexture(imagePath, gl, getPreloadedAsset) {
-  // Primero intentar obtener la imagen precargada
   const preloadedImage =
     getPreloadedAsset && getPreloadedAsset("images", imagePath);
 
   if (preloadedImage) {
-    // Usar la imagen ya precargada
     const texture = new THREE.Texture(preloadedImage);
     configureTexture(texture, gl);
     texture.needsUpdate = true;
@@ -106,7 +103,6 @@ export function loadImageTexture(imagePath, gl, getPreloadedAsset) {
     return texture;
   }
 
-  // Fallback al método original si no hay asset precargado
   if (textureCache.has(imagePath)) {
     return textureCache.get(imagePath);
   }
@@ -120,11 +116,9 @@ export function loadImageTexture(imagePath, gl, getPreloadedAsset) {
 }
 
 // Función corregida para crear un video fresco desde uno precargado
-export function createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl) {
-  // CREAR UN NUEVO ELEMENTO VIDEO - NO REUTILIZAR EL PRECARGADO
+export function createFreshVideoFromPreloaded(preloadedVideo, gl) {
   const freshVideo = document.createElement("video");
 
-  // Copiar las propiedades básicas
   freshVideo.src = preloadedVideo.src;
   freshVideo.crossOrigin = "anonymous";
   freshVideo.loop = true;
@@ -137,13 +131,11 @@ export function createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl) {
       freshVideo.removeEventListener("canplay", onCanPlay);
       freshVideo.removeEventListener("error", onError);
 
-      // Crear la textura con el video fresco
       const texture = new THREE.VideoTexture(freshVideo);
       configureTexture(texture, gl);
       texture.format = THREE.RGBAFormat;
       texture.generateMipmaps = false;
 
-      // Intentar reproducir
       freshVideo.play().catch(console.error);
 
       const result = {
@@ -165,24 +157,19 @@ export function createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl) {
     freshVideo.addEventListener("canplay", onCanPlay);
     freshVideo.addEventListener("error", onError);
 
-    // Iniciar la carga
     freshVideo.load();
   });
 }
 
 // Función optimizada para videos con cache, reutilización y assets precargados
 export function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
-  // Primero intentar obtener el video precargado
   const preloadedVideo =
     getPreloadedAsset && getPreloadedAsset("videos", videoSrc);
 
   if (preloadedVideo) {
-    // Crear un video fresco desde el precargado para evitar problemas WebGL
-    return createFreshVideoFromPreloaded(preloadedVideo, videoSrc, gl);
+    return createFreshVideoFromPreloaded(preloadedVideo, gl);
   }
 
-  // Fallback al método original si no hay asset precargado
-  // Verificar cache de videos activos
   if (videoCache.has(videoSrc)) {
     const cachedVideo = videoCache.get(videoSrc);
     if (!cachedVideo.video.ended && cachedVideo.video.readyState >= 2) {
@@ -216,10 +203,8 @@ export function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
         height: video.videoHeight,
       };
 
-      // Cachear el video por un tiempo limitado
       videoCache.set(videoSrc, result);
 
-      // Limpiar cache después de 5 minutos de inactividad
       setTimeout(() => {
         if (videoCache.has(videoSrc) && video.paused) {
           videoCache.delete(videoSrc);
@@ -240,70 +225,14 @@ export function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
   });
 }
 
-/**
- * Renderizar escenas de manera optimizada, evitando operaciones innecesarias
- */
-export function optimizedRenderScenes(
-  gl,
-  scenes,
-  camera,
-  renderTargets,
-  cache,
-  needsRenderRef
-) {
-  // ✅ GUARDAR ESTADO ACTUAL UNA SOLA VEZ
-  const currentRenderTarget = gl.getRenderTarget();
-  const currentClearAlpha = gl.getClearAlpha();
+// Función para crear video de humo
+export function createSmokeVideoTexture(gl, getPreloadedAsset) {
+  const smokeSrc = "Smoke_v02.mp4"; // Asumiendo que existe
 
-  // ✅ REUTILIZAR COLOR OBJECT EN LUGAR DE CREAR NUEVO
-  gl.getClearColor(cache.clearColor);
-
-  // ✅ RENDERIZAR SIEMPRE POR AHORA - REMOVER OPTIMIZACIÓN AGRESIVA
-  // TODO: Optimizar después de confirmar que funciona
-
-  // RENDERIZAR RT1
-  gl.setRenderTarget(renderTargets.rt1);
-  gl.setClearColor("#000000", 1);
-  gl.clear(true, true, true);
-  gl.render(scenes.scene1, camera);
-
-  // RENDERIZAR RT2
-  gl.setRenderTarget(renderTargets.rt2);
-  gl.setClearColor("#000000", 1);
-  gl.clear(true, true, true);
-  gl.render(scenes.scene2, camera);
-
-  // ✅ RESTAURAR ESTADO UNA SOLA VEZ
-  gl.setRenderTarget(currentRenderTarget);
-  gl.setClearColor(cache.clearColor, currentClearAlpha);
-}
-
-/**
- * Actualizar uniforms solo si los valores cambiaron
- */
-export function updateMaterialUniforms(
-  material,
-  renderTargets,
-  progress,
-  time,
-  cache
-) {
-  const uniforms = material.uniforms;
-  const lastValues = cache.lastUniforms;
-
-  // ✅ ACTUALIZAR TEXTURAS SIEMPRE POR AHORA - REMOVER OPTIMIZACIÓN AGRESIVA
-  uniforms.uTexture1.value = renderTargets.rt1.texture;
-  uniforms.uTexture2.value = renderTargets.rt2.texture;
-
-  // ✅ ACTUALIZAR PROGRESS SOLO SI CAMBIÓ SIGNIFICATIVAMENTE
-  if (Math.abs(lastValues.uProgress - progress) > 0.001) {
-    uniforms.uProgress.value = progress;
-    lastValues.uProgress = progress;
-  }
-
-  // ✅ ACTUALIZAR TIEMPO SIEMPRE (pero sin crear objetos nuevos)
-  uniforms.uTime.value = time;
-  lastValues.uTime = time;
+  return createVideoTexture(smokeSrc, gl, getPreloadedAsset).catch((error) => {
+    console.warn("No se pudo cargar video de humo:", error);
+    return null;
+  });
 }
 
 // Material optimizado con instancia única

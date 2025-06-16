@@ -6,6 +6,7 @@ import { useParallaxMouse } from "../hooks/useGlobalMouse";
 import {
   calculateCoverDimensions,
   calculateCoverDimensionsWithParallaxMargin,
+  createSmokeVideoTexture,
   createVideoTexture,
   DEFAULT_IMAGE,
   getGeometry,
@@ -31,6 +32,7 @@ export default function ImageTransitions({
     width: 1,
     height: 1,
   });
+  const [smokeVideoData, setSmokeVideoData] = useState(null);
   const { gl, viewport, size } = useThree();
 
   // Referencias optimizadas
@@ -50,6 +52,17 @@ export default function ImageTransitions({
 
   const parallaxValues = useParallaxMouse(!isTouch);
 
+  // 🚀 NOTIFICAR CAMBIOS DE PARALLAX - CORREGIDO
+  useEffect(() => {
+    if (onParallaxUpdate && !isTouch) {
+      onParallaxUpdate({
+        x: parallaxValues.x,
+        y: parallaxValues.y,
+        timestamp: performance.now(),
+      });
+    }
+  }, [parallaxValues.x, parallaxValues.y, onParallaxUpdate, isTouch]);
+
   // 🚀 THROTTLING INTELIGENTE DEL PARALLAX
   useEffect(() => {
     if (isTouch) return;
@@ -57,13 +70,12 @@ export default function ImageTransitions({
     const deltaX = Math.abs(parallaxValues.x - lastParallaxValues.current.x);
     const deltaY = Math.abs(parallaxValues.y - lastParallaxValues.current.y);
 
-    // Solo actualizar si el cambio es significativo
     if (deltaX > 0.001 || deltaY > 0.001) {
       needsParallaxUpdate.current = true;
       needsSceneRender.current = true;
       lastParallaxValues.current = { ...parallaxValues };
     }
-  }, [parallaxValues.x, parallaxValues.y, isTouch]);
+  }, [parallaxValues.x, parallaxValues.y, isTouch, parallaxValues]);
 
   // Cleanup de video mejorado
   const cleanupVideo = useCallback(() => {
@@ -123,6 +135,36 @@ export default function ImageTransitions({
 
     return textures;
   }, [gl, isTouch, getPreloadedAsset]);
+
+  // Cargar video de humo
+  useEffect(() => {
+    // if (isTouch) {
+    //   console.log("📱 Video de humo deshabilitado en dispositivos táctiles");
+    //   return;
+    // }
+
+    let isCancelled = false;
+
+    const loadSmokeVideo = async () => {
+      console.log("🔄 Iniciando carga de video de humo...");
+
+      const smokeData = await createSmokeVideoTexture(gl, getPreloadedAsset);
+
+      if (!isCancelled && smokeData) {
+        console.log("✅ Video de humo configurado exitosamente");
+        setSmokeVideoData(smokeData);
+      } else if (!smokeData) {
+        console.log("⚠️ No se pudo cargar el video de humo");
+      }
+    };
+
+    loadSmokeVideo();
+
+    return () => {
+      isCancelled = true;
+      console.log("🧹 Limpiando carga de video de humo");
+    };
+  }, [gl, getPreloadedAsset, isTouch]);
 
   // Render targets optimizados
   const renderTargets = useMemo(() => {
@@ -192,7 +234,7 @@ export default function ImageTransitions({
 
     const newRenderTargets = { rt1, rt2 };
     renderTargetsRef.current = newRenderTargets;
-    needsSceneRender.current = true; // Forzar render cuando se recrean los targets
+    needsSceneRender.current = true;
 
     return newRenderTargets;
   }, [size.width, size.height, gl, isMobile, isTablet]);
@@ -358,6 +400,7 @@ export default function ImageTransitions({
 
     // ESCENA 2: Parallax
     if (isTouch) {
+      // ✅ PLANO ESTÁTICO (igual que antes)
       const staticData = parallaxTextures.static;
       const coverDimensions = calculateCoverDimensions(
         staticData.width,
@@ -377,7 +420,41 @@ export default function ImageTransitions({
       const plane = new THREE.Mesh(geometry, material);
       plane.position.z = 0;
       scene2.add(plane);
-      parallaxPlanesRef.current = {};
+
+      // ✅ NUEVO - VIDEO DE HUMO ENCIMA DEL PLANO ESTÁTICO
+      if (smokeVideoData && smokeVideoData.texture) {
+        console.log(
+          "🌫️ Añadiendo video de humo encima del plano estático (móvil)"
+        );
+
+        const smokeCoverDimensions = calculateCoverDimensions(
+          smokeVideoData.width,
+          smokeVideoData.height,
+          viewport.width,
+          viewport.height
+        );
+
+        const smokeGeometry = getGeometry(
+          smokeCoverDimensions.width,
+          smokeCoverDimensions.height
+        );
+
+        const smokeMaterial = new THREE.MeshBasicMaterial({
+          map: smokeVideoData.texture,
+          transparent: true,
+          blendMode: THREE.AdditiveBlending,
+          opacity: 0.2,
+        });
+
+        const smokePlane = new THREE.Mesh(smokeGeometry, smokeMaterial);
+        smokePlane.position.z = 0.1; // ✅ Encima del plano estático
+        scene2.add(smokePlane);
+
+        // ✅ Guardar referencia (sin parallax, estático)
+        parallaxPlanesRef.current = { smoke: smokePlane };
+      } else {
+        parallaxPlanesRef.current = {};
+      }
     } else {
       const parallaxLayers = [
         {
@@ -406,28 +483,62 @@ export default function ImageTransitions({
         },
       ];
 
-      parallaxLayers.forEach(({ textureData, z, ref, parallaxFactor }) => {
-        const coverDimensions = calculateCoverDimensionsWithParallaxMargin(
-          textureData.width,
-          textureData.height,
-          viewport.width,
-          viewport.height,
-          parallaxFactor
-        );
+      if (smokeVideoData && smokeVideoData.texture) {
+        console.log("🌫️ Añadiendo capa de humo al parallax");
 
-        const geometry = getGeometry(
-          coverDimensions.width,
-          coverDimensions.height
-        );
-        const material = new THREE.MeshBasicMaterial({
-          map: textureData.texture,
+        parallaxLayers.push({
+          textureData: {
+            texture: smokeVideoData.texture,
+            width: smokeVideoData.width,
+            height: smokeVideoData.height,
+          },
+          z: 0.2,
+          ref: "smoke",
+          parallaxFactor: 0.05,
+          // 🎨 CONFIGURACIÓN DE BLEND - AHORA UTILIZADAS
+          blendMode: THREE.AdditiveBlending,
+          opacity: 1,
           transparent: true,
         });
-        const plane = new THREE.Mesh(geometry, material);
-        plane.position.z = z;
-        scene2.add(plane);
-        parallaxPlanesRef.current[ref] = plane;
-      });
+      }
+
+      parallaxLayers.forEach(
+        ({
+          textureData,
+          z,
+          ref,
+          parallaxFactor,
+          blendMode = THREE.NormalBlending,
+          opacity = 1,
+          transparent = true,
+        }) => {
+          const coverDimensions = calculateCoverDimensionsWithParallaxMargin(
+            textureData.width,
+            textureData.height,
+            viewport.width,
+            viewport.height,
+            parallaxFactor
+          );
+
+          const geometry = getGeometry(
+            coverDimensions.width,
+            coverDimensions.height
+          );
+
+          // 🎨 APLICAR CONFIGURACIONES DE BLEND - CORREGIDO
+          const material = new THREE.MeshBasicMaterial({
+            map: textureData.texture,
+            transparent,
+            opacity,
+            blending: blendMode,
+          });
+
+          const plane = new THREE.Mesh(geometry, material);
+          plane.position.z = z;
+          scene2.add(plane);
+          parallaxPlanesRef.current[ref] = plane;
+        }
+      );
     }
 
     needsSceneRender.current = true;
@@ -440,6 +551,7 @@ export default function ImageTransitions({
     mediaDimensions,
     isTouch,
     isVideoReady,
+    smokeVideoData,
   ]);
 
   useEffect(() => {
@@ -451,12 +563,24 @@ export default function ImageTransitions({
   useEffect(() => {
     return () => {
       cleanupVideo();
+
+      if (smokeVideoData && smokeVideoData.video) {
+        try {
+          const smokeVideo = smokeVideoData.video;
+          smokeVideo.pause();
+          smokeVideo.removeAttribute("src");
+          smokeVideo.load();
+        } catch (error) {
+          console.warn("Error limpiando video de humo:", error);
+        }
+      }
+
       if (renderTargetsRef.current) {
         renderTargetsRef.current.rt1.dispose();
         renderTargetsRef.current.rt2.dispose();
       }
     };
-  }, [cleanupVideo]);
+  }, [cleanupVideo, smokeVideoData]);
 
   // 🚀 RENDERIZADO OPTIMIZADO CONDICIONAL
   const renderScenesOptimized = useCallback(
@@ -496,6 +620,24 @@ export default function ImageTransitions({
           video.play().catch(() => {});
         }
         currentMedia.needsUpdate = true;
+      }
+    }
+
+    // 🆕 ACTUALIZAR VIDEO DE HUMO
+    if (smokeVideoData && smokeVideoData.video && smokeVideoData.texture) {
+      const smokeVideo = smokeVideoData.video;
+
+      if (
+        smokeVideo.readyState >= 2 &&
+        !smokeVideo.ended &&
+        smokeVideo.videoWidth > 0
+      ) {
+        if (smokeVideo.paused) {
+          smokeVideo.play().catch((error) => {
+            console.warn("No se pudo reproducir video de humo:", error);
+          });
+        }
+        smokeVideoData.texture.needsUpdate = true;
       }
     }
 
@@ -541,6 +683,7 @@ export default function ImageTransitions({
         clouds: 0.02,
         rain: 0.02,
         island: 0.05,
+        smoke: 0.025, // Añadido para el humo
       };
 
       Object.entries(parallaxFactors).forEach(([ref, factor]) => {
@@ -561,7 +704,7 @@ export default function ImageTransitions({
       needsSceneRender.current ||
       progressChanged ||
       isCurrentlyAnimating ||
-      now - lastRenderTime.current > 100; // Forzar render cada 100ms mínimo
+      now - lastRenderTime.current > 100;
 
     if (shouldRender) {
       renderScenesOptimized(gl, scenes, camera, renderTargets);
