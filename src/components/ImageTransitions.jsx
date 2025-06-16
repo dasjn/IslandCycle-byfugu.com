@@ -44,7 +44,7 @@ export default function ImageTransitions({
   const renderTargetsRef = useRef(null);
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
-  // 🚀 NUEVAS OPTIMIZACIONES DE PARALLAX
+  // 🚀 PARALLAX EXACTO DE LA VERSIÓN QUE FUNCIONA
   const lastParallaxValues = useRef({ x: 0, y: 0 });
   const lastRenderTime = useRef(0);
   const needsParallaxUpdate = useRef(false);
@@ -52,30 +52,20 @@ export default function ImageTransitions({
 
   const parallaxValues = useParallaxMouse(!isTouch);
 
-  // 🚀 NOTIFICAR CAMBIOS DE PARALLAX - CORREGIDO
-  useEffect(() => {
-    if (onParallaxUpdate && !isTouch) {
-      onParallaxUpdate({
-        x: parallaxValues.x,
-        y: parallaxValues.y,
-        timestamp: performance.now(),
-      });
-    }
-  }, [parallaxValues.x, parallaxValues.y, onParallaxUpdate, isTouch]);
-
-  // 🚀 THROTTLING INTELIGENTE DEL PARALLAX
+  // 🚀 THROTTLING INTELIGENTE DEL PARALLAX (EXACTO DE TU VERSIÓN)
   useEffect(() => {
     if (isTouch) return;
 
     const deltaX = Math.abs(parallaxValues.x - lastParallaxValues.current.x);
     const deltaY = Math.abs(parallaxValues.y - lastParallaxValues.current.y);
 
+    // Solo actualizar si el cambio es significativo
     if (deltaX > 0.001 || deltaY > 0.001) {
       needsParallaxUpdate.current = true;
       needsSceneRender.current = true;
       lastParallaxValues.current = { ...parallaxValues };
     }
-  }, [parallaxValues.x, parallaxValues.y, isTouch, parallaxValues]);
+  }, [parallaxValues.x, parallaxValues.y, isTouch]); // ✅ DEPENDENCY ARRAY EXACTO
 
   // Cleanup de video mejorado
   const cleanupVideo = useCallback(() => {
@@ -138,11 +128,6 @@ export default function ImageTransitions({
 
   // Cargar video de humo
   useEffect(() => {
-    // if (isTouch) {
-    //   console.log("📱 Video de humo deshabilitado en dispositivos táctiles");
-    //   return;
-    // }
-
     let isCancelled = false;
 
     const loadSmokeVideo = async () => {
@@ -164,9 +149,9 @@ export default function ImageTransitions({
       isCancelled = true;
       console.log("🧹 Limpiando carga de video de humo");
     };
-  }, [gl, getPreloadedAsset, isTouch]);
+  }, [gl, getPreloadedAsset]);
 
-  // Render targets optimizados
+  // Render targets optimizados (EXACTO DE TU VERSIÓN)
   const renderTargets = useMemo(() => {
     const sizeChanged =
       Math.abs(size.width - lastSizeRef.current.width) > 50 ||
@@ -234,7 +219,7 @@ export default function ImageTransitions({
 
     const newRenderTargets = { rt1, rt2 };
     renderTargetsRef.current = newRenderTargets;
-    needsSceneRender.current = true;
+    needsSceneRender.current = true; // Forzar render cuando se recrean los targets
 
     return newRenderTargets;
   }, [size.width, size.height, gl, isMobile, isTablet]);
@@ -400,7 +385,7 @@ export default function ImageTransitions({
 
     // ESCENA 2: Parallax
     if (isTouch) {
-      // ✅ PLANO ESTÁTICO (igual que antes)
+      // Plano estático para touch
       const staticData = parallaxTextures.static;
       const coverDimensions = calculateCoverDimensions(
         staticData.width,
@@ -421,7 +406,7 @@ export default function ImageTransitions({
       plane.position.z = 0;
       scene2.add(plane);
 
-      // ✅ NUEVO - VIDEO DE HUMO ENCIMA DEL PLANO ESTÁTICO
+      // Video de humo encima del plano estático (para touch)
       if (smokeVideoData && smokeVideoData.texture) {
         console.log(
           "🌫️ Añadiendo video de humo encima del plano estático (móvil)"
@@ -442,20 +427,20 @@ export default function ImageTransitions({
         const smokeMaterial = new THREE.MeshBasicMaterial({
           map: smokeVideoData.texture,
           transparent: true,
-          blendMode: THREE.AdditiveBlending,
-          opacity: 0.2,
+          blending: THREE.AdditiveBlending,
+          opacity: 0.5,
         });
 
         const smokePlane = new THREE.Mesh(smokeGeometry, smokeMaterial);
-        smokePlane.position.z = 0.1; // ✅ Encima del plano estático
+        smokePlane.position.z = 0.1;
         scene2.add(smokePlane);
 
-        // ✅ Guardar referencia (sin parallax, estático)
         parallaxPlanesRef.current = { smoke: smokePlane };
       } else {
         parallaxPlanesRef.current = {};
       }
     } else {
+      // Capas de parallax para desktop (EXACTO DE TU VERSIÓN)
       const parallaxLayers = [
         {
           textureData: parallaxTextures.bg,
@@ -483,6 +468,7 @@ export default function ImageTransitions({
         },
       ];
 
+      // Añadir video de humo como capa de parallax
       if (smokeVideoData && smokeVideoData.texture) {
         console.log("🌫️ Añadiendo capa de humo al parallax");
 
@@ -494,10 +480,9 @@ export default function ImageTransitions({
           },
           z: 0.2,
           ref: "smoke",
-          parallaxFactor: 0.05,
-          // 🎨 CONFIGURACIÓN DE BLEND - AHORA UTILIZADAS
+          parallaxFactor: 0.025,
           blendMode: THREE.AdditiveBlending,
-          opacity: 1,
+          opacity: 0.7,
           transparent: true,
         });
       }
@@ -525,7 +510,6 @@ export default function ImageTransitions({
             coverDimensions.height
           );
 
-          // 🎨 APLICAR CONFIGURACIONES DE BLEND - CORREGIDO
           const material = new THREE.MeshBasicMaterial({
             map: textureData.texture,
             transparent,
@@ -551,7 +535,7 @@ export default function ImageTransitions({
     mediaDimensions,
     isTouch,
     isVideoReady,
-    smokeVideoData,
+    smokeVideoData, // ✅ Solo añado esto para el humo
   ]);
 
   useEffect(() => {
@@ -582,7 +566,7 @@ export default function ImageTransitions({
     };
   }, [cleanupVideo, smokeVideoData]);
 
-  // 🚀 RENDERIZADO OPTIMIZADO CONDICIONAL
+  // 🚀 RENDERIZADO OPTIMIZADO CONDICIONAL (EXACTO DE TU VERSIÓN)
   const renderScenesOptimized = useCallback(
     (gl, scenes, camera, renderTargets) => {
       const currentRenderTarget = gl.getRenderTarget();
@@ -612,7 +596,7 @@ export default function ImageTransitions({
     const time = state.clock.elapsedTime;
     const now = performance.now();
 
-    // ✅ ACTUALIZAR VIDEO TEXTURE
+    // ✅ ACTUALIZAR VIDEO TEXTURE PRINCIPAL
     if (currentVideoRef.current && currentMedia && isVideoReady) {
       const video = currentVideoRef.current;
       if (video.readyState >= 2 && !video.ended && video.videoWidth > 0) {
@@ -620,10 +604,12 @@ export default function ImageTransitions({
           video.play().catch(() => {});
         }
         currentMedia.needsUpdate = true;
+        // ✅ PEQUEÑA OPTIMIZACIÓN: Solo forzar render cuando video realmente se actualiza
+        needsSceneRender.current = true;
       }
     }
 
-    // 🆕 ACTUALIZAR VIDEO DE HUMO
+    // ✅ ACTUALIZAR VIDEO DE HUMO
     if (smokeVideoData && smokeVideoData.video && smokeVideoData.texture) {
       const smokeVideo = smokeVideoData.video;
 
@@ -641,7 +627,7 @@ export default function ImageTransitions({
       }
     }
 
-    // ✅ ANIMACIÓN DE PROGRESO
+    // ✅ ANIMACIÓN DE PROGRESO (EXACTO DE TU VERSIÓN)
     const shouldAnimate = !isToggled || (isToggled && isVideoReady);
     let progressChanged = false;
 
@@ -658,7 +644,7 @@ export default function ImageTransitions({
       }
     }
 
-    // ✅ GESTIÓN DE ANIMACIÓN
+    // ✅ GESTIÓN DE ANIMACIÓN (EXACTO DE TU VERSIÓN)
     const threshold = 0.3;
     const progressDiff = (isToggled ? 1 : 0) - progressRef.current;
     const isCurrentlyAnimating = Math.abs(progressDiff) > threshold;
@@ -676,14 +662,14 @@ export default function ImageTransitions({
       setDisplayedNumber(null);
     }
 
-    // 🚀 PARALLAX OPTIMIZADO - SOLO ACTUALIZAR SI ES NECESARIO
+    // 🚀 PARALLAX OPTIMIZADO - SOLO ACTUALIZAR SI ES NECESARIO (EXACTO DE TU VERSIÓN)
     if (!isTouch && needsParallaxUpdate.current) {
       const parallaxFactors = {
         bg: 0.01,
         clouds: 0.02,
         rain: 0.02,
         island: 0.05,
-        smoke: 0.025, // Añadido para el humo
+        smoke: 0.025, // ✅ Solo añado el factor de humo
       };
 
       Object.entries(parallaxFactors).forEach(([ref, factor]) => {
@@ -699,12 +685,12 @@ export default function ImageTransitions({
       needsParallaxUpdate.current = false;
     }
 
-    // 🚀 RENDERIZADO CONDICIONAL - SOLO CUANDO SEA NECESARIO
+    // 🚀 RENDERIZADO CONDICIONAL - SOLO CUANDO SEA NECESARIO (EXACTO DE TU VERSIÓN)
     const shouldRender =
       needsSceneRender.current ||
       progressChanged ||
       isCurrentlyAnimating ||
-      now - lastRenderTime.current > 100;
+      now - lastRenderTime.current > 100; // Forzar render cada 100ms mínimo
 
     if (shouldRender) {
       renderScenesOptimized(gl, scenes, camera, renderTargets);

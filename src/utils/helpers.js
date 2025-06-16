@@ -1,7 +1,5 @@
 import * as THREE from "three";
-
 import { shaderMaterial } from "@react-three/drei";
-
 import vertexShader from "../shaders/vertex.glsl";
 import fragmentShader from "../shaders/fragment.glsl";
 
@@ -225,9 +223,9 @@ export function createVideoTexture(videoSrc, gl, getPreloadedAsset) {
   });
 }
 
-// Función para crear video de humo
+// 🌫️ FUNCIÓN PARA CREAR VIDEO DE HUMO - PERFECTA
 export function createSmokeVideoTexture(gl, getPreloadedAsset) {
-  const smokeSrc = "Smoke_v02.mp4"; // Asumiendo que existe
+  const smokeSrc = "Smoke_v02.mp4";
 
   return createVideoTexture(smokeSrc, gl, getPreloadedAsset).catch((error) => {
     console.warn("No se pudo cargar video de humo:", error);
