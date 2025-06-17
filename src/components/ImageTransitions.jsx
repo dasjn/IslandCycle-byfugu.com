@@ -119,7 +119,7 @@ export default function ImageTransitions({
       },
       island: {
         texture: loadImageTexture("Island_v03.webp", gl, getPreloadedAsset),
-        width: 3000,
+        width: 1920,
         height: 1080,
       },
     };
@@ -465,7 +465,7 @@ export default function ImageTransitions({
           textureData: parallaxTextures.island,
           z: 0.1,
           ref: "island",
-          parallaxFactor: 0.05,
+          parallaxFactor: 0.15,
         },
       ];
 
