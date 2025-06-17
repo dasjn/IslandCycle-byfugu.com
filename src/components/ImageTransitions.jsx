@@ -669,7 +669,7 @@ export default function ImageTransitions({
         bg: 0.01,
         clouds: 0.02,
         rain: 0.02,
-        island: 0.05,
+        island: 0.03,
         smoke: 0.025, // ✅ Solo añado el factor de humo
       };
 
