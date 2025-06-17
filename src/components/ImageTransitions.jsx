@@ -22,6 +22,7 @@ export default function ImageTransitions({
   onParallaxUpdate,
   onAnimationChange,
   getPreloadedAsset,
+  debugMode = false,
 }) {
   const { isTouch, isMobile, isTablet } = useDevice();
 
@@ -50,7 +51,7 @@ export default function ImageTransitions({
   const needsParallaxUpdate = useRef(false);
   const needsSceneRender = useRef(true);
 
-  const parallaxValues = useParallaxMouse(!isTouch);
+  const parallaxValues = useParallaxMouse(!isTouch && !debugMode);
 
   // 🚀 THROTTLING INTELIGENTE DEL PARALLAX (EXACTO DE TU VERSIÓN)
   useEffect(() => {
@@ -464,7 +465,7 @@ export default function ImageTransitions({
           textureData: parallaxTextures.island,
           z: 0.1,
           ref: "island",
-          parallaxFactor: 0.05,
+          parallaxFactor: 0.13,
         },
       ];
 
@@ -668,7 +669,7 @@ export default function ImageTransitions({
         bg: 0.01,
         clouds: 0.02,
         rain: 0.02,
-        island: 0.05,
+        island: 0.03,
         smoke: 0.025, // ✅ Solo añado el factor de humo
       };
 
