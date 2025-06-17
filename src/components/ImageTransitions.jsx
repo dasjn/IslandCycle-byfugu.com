@@ -65,7 +65,7 @@ export default function ImageTransitions({
       needsSceneRender.current = true;
       lastParallaxValues.current = { ...parallaxValues };
     }
-  }, [parallaxValues.x, parallaxValues.y, isTouch]); // ✅ DEPENDENCY ARRAY EXACTO
+  }, [parallaxValues.x, parallaxValues.y, isTouch, parallaxValues]); // ✅ DEPENDENCY ARRAY EXACTO
 
   // Cleanup de video mejorado
   const cleanupVideo = useCallback(() => {
@@ -619,11 +619,11 @@ export default function ImageTransitions({
         smokeVideo.videoWidth > 0
       ) {
         if (smokeVideo.paused) {
-          smokeVideo.play().catch((error) => {
-            console.warn("No se pudo reproducir video de humo:", error);
-          });
+          smokeVideo.play().catch(() => {});
         }
+        // ✅ CAMBIO CLAVE: Actualizar SIEMPRE, no depender del mouse
         smokeVideoData.texture.needsUpdate = true;
+        needsSceneRender.current = true;
       }
     }
 
