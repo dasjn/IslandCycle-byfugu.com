@@ -35,11 +35,6 @@ export default function CubesSvg({ selectedNumber }) {
     },
   ];
 
-  // Filtrar polígonos: mostrar del 1 al selectedNumber
-  const visiblePolygons = polygons.filter(
-    (polygon) => polygon.id <= selectedNumber
-  );
-
   return (
     <svg
       id="Capa_2"
@@ -49,30 +44,34 @@ export default function CubesSvg({ selectedNumber }) {
       className="w-100 h-40"
     >
       <g id="Capa_1-2" data-name="Capa 1">
-        {visiblePolygons.map((polygon, index) => (
-          <motion.polygon
-            key={polygon.id}
-            points={polygon.points}
-            fill="currentColor"
-            initial={{
-              opacity: 0,
-              scale: 0.3,
-            }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              scale: 0.3,
-            }}
-            transition={{
-              duration: 0.6,
-              delay: index * 0.15, // Delay escalonado para que aparezcan uno tras otro
-              ease: [0.25, 0.1, 0.25, 1],
-            }}
-          />
-        ))}
+        {polygons.map((polygon, index) => {
+          const isSelected = polygon.id <= selectedNumber;
+
+          return (
+            <motion.polygon
+              key={polygon.id}
+              points={polygon.points}
+              fill="currentColor"
+              initial={{
+                opacity: 0,
+                scale: 0.3,
+              }}
+              animate={{
+                opacity: isSelected ? 1 : 0.25,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.3,
+              }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.15, // Delay escalonado para que aparezcan uno tras otro
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
+            />
+          );
+        })}
       </g>
     </svg>
   );
