@@ -498,7 +498,10 @@ function InteractiveSVG({
         ))}
 
         {/* Número 6 con imagen */}
-        <g className="number-6-group">
+        <g
+          className="number-6-group"
+          onClick={isTouch ? () => onNumberClick(6) : undefined}
+        >
           <MagneticNumber
             number={numero6Props.number}
             section={numero6Props.section}
@@ -515,7 +518,7 @@ function InteractiveSVG({
             x={numero6Props.hitArea.x + numero6Props.hitArea.width + 8 + 100}
             y={numero6Props.hitArea.y + 8 - 40}
             textAnchor="middle"
-            style={{ pointerEvents: "none", fill: "#fff" }}
+            style={{ pointerEvents: isTouch ? "all" : "none", fill: "#fff" }}
           >
             ISLAND PARTNER
           </text>
@@ -526,7 +529,7 @@ function InteractiveSVG({
             y={numero6Props.hitArea.y + 8}
             width="200"
             height="200"
-            style={{ pointerEvents: "none", opacity: 0.9 }}
+            style={{ pointerEvents: isTouch ? "all" : "none", opacity: 0.9 }}
           />
         </g>
       </svg>
