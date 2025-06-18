@@ -1,8 +1,150 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMagneticCursor } from "../hooks/useMagneticCursor";
 import { useDevice } from "../hooks/useDevice";
 import CircleSvg from "../assets/CircleSvg";
+
+const SVG_DIMENSIONS = {
+  width: 1301,
+  height: 1081,
+};
+
+/**
+ * Calcula coordenadas absolutas basadas en porcentajes del SVG
+ * @param {number} xPercent - Porcentaje horizontal (0-100)
+ * @param {number} yPercent - Porcentaje vertical (0-100)
+ * @returns {Object} - Coordenadas {x, y}
+ */
+function calculateSVGPosition(xPercent, yPercent) {
+  return {
+    x: (SVG_DIMENSIONS.width * xPercent) / 100,
+    y: (SVG_DIMENSIONS.height * yPercent) / 100,
+  };
+}
+
+/**
+ * Calcula coordenadas desde los bordes (útil para right/bottom)
+ * @param {Object} options - Opciones de posicionamiento
+ * @param {number} options.left - Porcentaje desde la izquierda
+ * @param {number} options.right - Porcentaje desde la derecha
+ * @param {number} options.top - Porcentaje desde arriba
+ * @param {number} options.bottom - Porcentaje desde abajo
+ * @returns {Object} - Coordenadas {x, y}
+ */
+function calculateSVGEdgePosition({ left, right, top, bottom }) {
+  let x, y;
+
+  if (left !== undefined) {
+    x = (SVG_DIMENSIONS.width * left) / 100;
+  } else if (right !== undefined) {
+    x = SVG_DIMENSIONS.width - (SVG_DIMENSIONS.width * right) / 100;
+  }
+
+  if (top !== undefined) {
+    y = (SVG_DIMENSIONS.height * top) / 100;
+  } else if (bottom !== undefined) {
+    y = SVG_DIMENSIONS.height - (SVG_DIMENSIONS.height * bottom) / 100;
+  }
+
+  return { x, y };
+}
+
+/**
+ * Genera las coordenadas del frame para un número magnético
+ * @param {number} centerX - Coordenada X del centro
+ * @param {number} centerY - Coordenada Y del centro
+ * @param {number} size - Tamaño del frame (default: 31)
+ * @returns {Array} - Array de strings con las coordenadas del frame
+ */
+function generateMagneticNumberFrame(centerX, centerY, size = 31) {
+  const halfSize = size / 2;
+  const frameOffset = 8.68; // Offset entre las líneas del frame
+
+  return [
+    // Línea superior derecha
+    `${centerX + halfSize - frameOffset} ${centerY + halfSize} ${
+      centerX + halfSize
+    } ${centerY + halfSize} ${centerX + halfSize} ${
+      centerY + halfSize - frameOffset
+    }`,
+    // Línea superior izquierda
+    `${centerX - halfSize + frameOffset} ${centerY - halfSize} ${
+      centerX - halfSize
+    } ${centerY - halfSize} ${centerX - halfSize} ${
+      centerY - halfSize + frameOffset
+    }`,
+    // Línea inferior izquierda
+    `${centerX - halfSize} ${centerY + halfSize - frameOffset} ${
+      centerX - halfSize
+    } ${centerY + halfSize} ${centerX - halfSize + frameOffset} ${
+      centerY + halfSize
+    }`,
+    // Línea inferior derecha
+    `${centerX + halfSize} ${centerY - halfSize + frameOffset} ${
+      centerX + halfSize
+    } ${centerY - halfSize} ${centerX + halfSize - frameOffset} ${
+      centerY - halfSize
+    }`,
+  ];
+}
+
+/**
+ * Genera todas las propiedades necesarias para un MagneticNumber
+ * @param {Object} options - Opciones de configuración
+ * @param {number} options.number - Número a mostrar
+ * @param {string} options.section - Nombre de la sección
+ * @param {Object} options.position - Posición {x, y} o porcentajes
+ * @param {number} options.frameSize - Tamaño del frame (default: 31)
+ * @param {number} options.hitAreaSize - Tamaño del área de hit (default: 42)
+ * @returns {Object} - Propiedades para MagneticNumber
+ */
+function createMagneticNumberProps({
+  number,
+  section,
+  position,
+  frameSize = 31,
+  hitAreaSize = 42,
+}) {
+  // Si position tiene porcentajes, calcular coordenadas
+  let centerX, centerY;
+
+  if (
+    position.left !== undefined ||
+    position.right !== undefined ||
+    position.top !== undefined ||
+    position.bottom !== undefined
+  ) {
+    const coords = calculateSVGEdgePosition(position);
+    centerX = coords.x;
+    centerY = coords.y;
+  } else if (
+    position.xPercent !== undefined ||
+    position.yPercent !== undefined
+  ) {
+    const coords = calculateSVGPosition(position.xPercent, position.yPercent);
+    centerX = coords.x;
+    centerY = coords.y;
+  } else {
+    centerX = position.x;
+    centerY = position.y;
+  }
+
+  const framePoints = generateMagneticNumberFrame(centerX, centerY, frameSize);
+  const hitAreaOffset = hitAreaSize / 2;
+
+  return {
+    number: number.toString(),
+    section,
+    framePoints,
+    textTransform: `translate(${centerX - 7} ${centerY + 8.5})`, // Ajuste para centrar el texto
+    hitArea: {
+      x: centerX - hitAreaOffset,
+      y: centerY - hitAreaOffset,
+      width: hitAreaSize,
+      height: hitAreaSize,
+    },
+  };
+}
 
 export default function CircleSelector({
   parallaxValues,
@@ -171,7 +313,25 @@ function InteractiveSVG({
   onSectionLeave,
   onNumberClick,
 }) {
-  const { isTouch } = useDevice();
+  const { isTouch, isMobile, isTablet } = useDevice();
+
+  const numero6Props = useMemo(() => {
+    const getPosition = () => {
+      if (isMobile) {
+        return { right: 30, bottom: 0 }; // Posición móvil
+      }
+      if (isTablet) {
+        return { right: 30, bottom: 110 }; // Posición tablet
+      }
+      return { right: 10, bottom: 30 }; // Posición desktop
+    };
+
+    return createMagneticNumberProps({
+      number: 6,
+      section: "custom",
+      position: getPosition(),
+    });
+  }, [isMobile, isTablet]);
 
   return (
     <div className="absolute inset-0">
@@ -190,6 +350,18 @@ function InteractiveSVG({
                 font-size: 26px;
                 font-weight: 200;
                 fill: #fff;
+              }
+
+              .cls-2 {
+                font-family: Archivo-Regular, Archivo;
+                font-size: 20px;
+                font-weight: 400;
+              }
+
+              .cls-7 {
+                font-family: Archivo-Regular, Archivo;
+                font-size: 36px;
+                font-weight: 400;
               }
 
               .cls-2, .cls-3, .cls-4, .cls-5 {
@@ -628,6 +800,46 @@ function InteractiveSVG({
           onHover={() => onSectionHover("evaporation")}
           onLeave={() => onSectionLeave()}
         />
+        <g className="number-6-group">
+          {/* Número 6 magnético */}
+          <MagneticNumber
+            number={numero6Props.number}
+            section={numero6Props.section}
+            framePoints={numero6Props.framePoints}
+            textTransform={numero6Props.textTransform}
+            hitArea={numero6Props.hitArea}
+            onClick={() => onNumberClick(6)}
+            onHover={() => onSectionHover("custom")}
+            onLeave={() => onSectionLeave()}
+          />
+
+          {/* Texto justo encima de la pegatina */}
+          <text
+            className={`${isMobile || isTablet ? "cls-7" : "cls-2"}`}
+            x={numero6Props.hitArea.x + numero6Props.hitArea.width + 8 + 100} // Centrado en la imagen
+            y={numero6Props.hitArea.y + 8 - 40} // Justo encima de la imagen (no del número)
+            textAnchor="middle"
+            style={{
+              pointerEvents: "none",
+              fill: "#fff",
+            }}
+          >
+            ISLAND PARTNER
+          </text>
+
+          {/* Imagen al lado del número 6 */}
+          <image
+            href="/Sticker_v01.webp"
+            x={numero6Props.hitArea.x + numero6Props.hitArea.width + 8}
+            y={numero6Props.hitArea.y + 8}
+            width="200"
+            height="200"
+            style={{
+              pointerEvents: "none",
+              opacity: 0.9,
+            }}
+          />
+        </g>
       </svg>
     </div>
   );

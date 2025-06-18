@@ -8,7 +8,6 @@ import {
   calculateCoverDimensionsWithParallaxMargin,
   createSmokeVideoTexture,
   createVideoTexture,
-  DEFAULT_IMAGE,
   getGeometry,
   loadImageTexture,
   MEDIA_MAP,
@@ -25,7 +24,7 @@ export default function ImageTransitions({
   debugMode = false,
 }) {
   const { isTouch, isMobile, isTablet } = useDevice();
-
+  const DEFAULT_IMAGE = null;
   const [displayedNumber, setDisplayedNumber] = useState(null);
   const [currentMedia, setCurrentMedia] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);

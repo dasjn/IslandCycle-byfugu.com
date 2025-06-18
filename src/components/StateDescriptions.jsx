@@ -54,6 +54,17 @@ const STATE_DATA = {
     deliverables: "Strategic plans, visual updates, and micro-initiatives.",
     number: "5",
   },
+  6: {
+    category: "FUGU ISLAND PARTNER",
+    title: "EVOLUTION",
+    subtitle: "Long-term brand alignment program.",
+    description: "Clarity is built over time, and we help you protect it.",
+    longDescription:
+      "We stay by your side after launch, making sure your brand evolves without losing focus. From small updates to big decisions, we help your identity stay sharp and aligned across every touchpoint.",
+    deliverables:
+      "Cycle audits, strategy reviews, brand & web refinements, priority access for new needs. Your brand, always consistent. Always evolving.",
+    number: "6",
+  },
 };
 
 export default function StateDescriptions({ selectedNumber, isAnimating }) {
@@ -74,7 +85,34 @@ export default function StateDescriptions({ selectedNumber, isAnimating }) {
           <div className="max-w-screen sm:max-w-4xl mx-auto px-8 text-center text-white -mt-14 sm:mt-0 flex flex-col items-center gap-12 sm:gap-16">
             {/* Elementos geométricos decorativos */}
             <div className="flex justify-center scale-60 -mb-14 sm:mb-0 sm:scale-100">
-              <CubesSvg selectedNumber={selectedNumber} />
+              {selectedNumber < 6 ? (
+                <CubesSvg selectedNumber={selectedNumber} />
+              ) : (
+                <motion.img
+                  initial={{
+                    opacity: 0,
+                    scale: 1.3,
+                    rotateZ: -90,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    rotateZ: 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.7,
+                    rotateZ: 90,
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.15, // Delay escalonado para que aparezcan uno tras otro
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
+                  className="w-50"
+                  src="/Sticker_v01.webp"
+                />
+              )}
             </div>
 
             <div>

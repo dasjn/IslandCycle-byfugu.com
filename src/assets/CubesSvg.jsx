@@ -57,7 +57,7 @@ export default function CubesSvg({ selectedNumber }) {
                 scale: 0.3,
               }}
               animate={{
-                opacity: isSelected ? 1 : 0.25,
+                opacity: isSelected ? 1 : 0.15,
                 scale: 1,
               }}
               exit={{
