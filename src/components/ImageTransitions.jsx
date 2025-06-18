@@ -88,7 +88,7 @@ export default function ImageTransitions({
   const parallaxTextures = useMemo(() => {
     if (isTouch) {
       const staticTexture = loadImageTexture(
-        "TheIslandCycle_All_v04.png",
+        "TheIslandCycle_All_v05.webp",
         gl,
         getPreloadedAsset
       );
@@ -118,7 +118,7 @@ export default function ImageTransitions({
         height: 1080,
       },
       island: {
-        texture: loadImageTexture("Island_v03.webp", gl, getPreloadedAsset),
+        texture: loadImageTexture("Island_v04.webp", gl, getPreloadedAsset),
         width: 1920,
         height: 1080,
       },

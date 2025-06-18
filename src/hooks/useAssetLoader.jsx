@@ -12,10 +12,10 @@ const ASSETS_TO_PRELOAD = {
     "Smoke_v02.mp4",
   ],
   images: [
-    "TheIslandCycle_All_v04.png",
+    "TheIslandCycle_All_v05.webp",
     "BG_v03.png",
     "Clouds_v01.webp",
-    "Island_v03.webp",
+    "Island_v04.webp",
     "Rain_v01.webp",
   ],
 };
