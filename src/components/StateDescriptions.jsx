@@ -60,9 +60,9 @@ const STATE_DATA = {
     subtitle: "Long-term brand alignment program.",
     description: "Clarity is built over time, and we help you protect it.",
     longDescription:
-      "We stay by your side after launch, making sure your brand evolves without losing focus. From small updates to big decisions, we help your identity stay sharp and aligned across every touchpoint.",
+      "We stay by your side after launch, ensuring your brand evolves without losing focus. From updates to big decisions, we keep your identity consistent.",
     deliverables:
-      "Cycle audits, strategy reviews, brand & web refinements, priority access for new needs. Your brand, always consistent. Always evolving.",
+      "Audits, reviews, refinements, priority access. Always consistent. Always evolving.",
     number: "6",
   },
 };
