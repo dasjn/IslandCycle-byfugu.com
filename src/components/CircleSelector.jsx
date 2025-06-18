@@ -417,21 +417,25 @@ function InteractiveSVG({
   onSectionLeave,
   onNumberClick,
 }) {
-  const { isTouch, isMobile, isTablet } = useDevice();
+  const { isTouch, isMobile, isTablet, isLandscape } = useDevice();
 
   const numero6Props = useMemo(() => {
     const getPosition = () => {
-      if (isMobile) return { right: 30, bottom: 0 };
-      if (isTablet) return { right: 30, bottom: 110 };
-      return { right: 10, bottom: 30 };
+      if (isLandscape) {
+        // Pantalla más ancha que alta (landscape)
+        return { right: 10, bottom: 30 };
+      } else {
+        // Pantalla más alta que ancha (portrait)
+        return { right: 30, bottom: 0 };
+      }
     };
 
     return createMagneticNumberProps({
       number: 6,
-      section: "custom",
+      section: "evolution",
       position: getPosition(),
     });
-  }, [isMobile, isTablet]);
+  }, [isLandscape]);
 
   return (
     <div className="absolute inset-0">
@@ -502,7 +506,7 @@ function InteractiveSVG({
             textTransform={numero6Props.textTransform}
             hitArea={numero6Props.hitArea}
             onClick={() => onNumberClick(6)}
-            onHover={() => onSectionHover("custom")}
+            onHover={() => onSectionHover("evolution")}
             onLeave={() => onSectionLeave()}
           />
 

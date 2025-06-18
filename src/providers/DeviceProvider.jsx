@@ -48,12 +48,23 @@ const detectTabletDevice = () => {
   return userAgentTablet || (screenSizeTablet && touchTablet);
 };
 
+// ✅ NUEVAS FUNCIONES PARA DETECTAR ORIENTACIÓN
+const detectLandscape = () => {
+  return window.innerWidth > window.innerHeight;
+};
+
+const detectPortrait = () => {
+  return window.innerHeight > window.innerWidth;
+};
+
 // Provider del contexto
 export const DeviceProvider = ({ children }) => {
   const [deviceInfo, setDeviceInfo] = useState(() => ({
     isTouch: detectTouchDevice(),
     isMobile: detectMobileDevice(),
     isTablet: detectTabletDevice(),
+    isLandscape: detectLandscape(), // ✅ NUEVO
+    isPortrait: detectPortrait(), // ✅ NUEVO
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
     pixelRatio: window.devicePixelRatio,
@@ -71,6 +82,8 @@ export const DeviceProvider = ({ children }) => {
           isTouch: detectTouchDevice(),
           isMobile: detectMobileDevice(),
           isTablet: detectTabletDevice(),
+          isLandscape: detectLandscape(), // ✅ NUEVO
+          isPortrait: detectPortrait(), // ✅ NUEVO
           screenWidth: window.innerWidth,
           screenHeight: window.innerHeight,
           pixelRatio: window.devicePixelRatio,
