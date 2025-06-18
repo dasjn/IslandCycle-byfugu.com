@@ -88,6 +88,25 @@ export const calculateCoverDimensionsWithParallaxMargin = (
   };
 };
 
+export const createBlackTexture = (gl) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 2;
+  canvas.height = 2;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, 2, 2);
+
+  const blackTexture = new THREE.CanvasTexture(canvas);
+  blackTexture.colorSpace = THREE.NoColorSpace;
+  blackTexture.generateMipmaps = false;
+  blackTexture.wrapS = THREE.ClampToEdgeWrapping;
+  blackTexture.wrapT = THREE.ClampToEdgeWrapping;
+  blackTexture.minFilter = THREE.LinearFilter;
+  blackTexture.magFilter = THREE.LinearFilter;
+
+  return blackTexture;
+};
+
 // Función optimizada para cargar texturas con cache mejorado y assets precargados
 export function loadImageTexture(imagePath, gl, getPreloadedAsset) {
   const preloadedImage =

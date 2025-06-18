@@ -6,6 +6,7 @@ import { useParallaxMouse } from "../hooks/useGlobalMouse";
 import {
   calculateCoverDimensions,
   calculateCoverDimensionsWithParallaxMargin,
+  createBlackTexture,
   createSmokeVideoTexture,
   createVideoTexture,
   getGeometry,
@@ -23,8 +24,8 @@ export default function ImageTransitions({
   getPreloadedAsset,
   debugMode = false,
 }) {
-  const { isTouch, isMobile, isTablet } = useDevice();
   const DEFAULT_IMAGE = null;
+  const { isTouch, isMobile, isTablet } = useDevice();
   const [displayedNumber, setDisplayedNumber] = useState(null);
   const [currentMedia, setCurrentMedia] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -256,32 +257,56 @@ export default function ImageTransitions({
 
     const loadMedia = async () => {
       if (!displayedNumber) {
-        const defaultTexture = loadImageTexture(
-          DEFAULT_IMAGE,
-          gl,
-          getPreloadedAsset
-        );
-        if (!isCancelled) {
-          setCurrentMedia(defaultTexture);
-          setMediaDimensions({ width: 1920, height: 1080 });
-          setIsVideoReady(true);
-          needsSceneRender.current = true;
+        // ✅ Si hay DEFAULT_IMAGE → cargarla, si no → textura negra
+        if (DEFAULT_IMAGE) {
+          const defaultTexture = loadImageTexture(
+            DEFAULT_IMAGE,
+            gl,
+            getPreloadedAsset
+          );
+          if (!isCancelled) {
+            setCurrentMedia(defaultTexture);
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          }
+        } else {
+          // Si DEFAULT_IMAGE es null → crear textura negra
+          const blackTexture = createBlackTexture(gl);
+          if (!isCancelled) {
+            setCurrentMedia(blackTexture);
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          }
         }
         return;
       }
 
       const mediaConfig = MEDIA_MAP[displayedNumber];
       if (!mediaConfig) {
-        const defaultTexture = loadImageTexture(
-          DEFAULT_IMAGE,
-          gl,
-          getPreloadedAsset
-        );
-        if (!isCancelled) {
-          setCurrentMedia(defaultTexture);
-          setMediaDimensions({ width: 1920, height: 1080 });
-          setIsVideoReady(true);
-          needsSceneRender.current = true;
+        // ✅ Si hay DEFAULT_IMAGE → cargarla, si no → textura negra
+        if (DEFAULT_IMAGE) {
+          const defaultTexture = loadImageTexture(
+            DEFAULT_IMAGE,
+            gl,
+            getPreloadedAsset
+          );
+          if (!isCancelled) {
+            setCurrentMedia(defaultTexture);
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          }
+        } else {
+          // Si DEFAULT_IMAGE es null → crear textura negra
+          const blackTexture = createBlackTexture(gl);
+          if (!isCancelled) {
+            setCurrentMedia(blackTexture);
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          }
         }
         return;
       }
@@ -329,12 +354,22 @@ export default function ImageTransitions({
       } catch (error) {
         console.error("Error cargando media:", error);
         if (!isCancelled) {
-          setCurrentMedia(
-            loadImageTexture(DEFAULT_IMAGE, gl, getPreloadedAsset)
-          );
-          setMediaDimensions({ width: 1920, height: 1080 });
-          setIsVideoReady(true);
-          needsSceneRender.current = true;
+          // ✅ En caso de error: Si hay DEFAULT_IMAGE → cargarla, si no → textura negra
+          if (DEFAULT_IMAGE) {
+            setCurrentMedia(
+              loadImageTexture(DEFAULT_IMAGE, gl, getPreloadedAsset)
+            );
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          } else {
+            // Si DEFAULT_IMAGE es null → crear textura negra
+            const blackTexture = createBlackTexture(gl);
+            setCurrentMedia(blackTexture);
+            setMediaDimensions({ width: 1920, height: 1080 });
+            setIsVideoReady(true);
+            needsSceneRender.current = true;
+          }
         }
       }
     };
